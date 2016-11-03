@@ -32,3 +32,14 @@ class Flow:
 
     def set_dest(self, dest):
         self.dest = dest
+
+
+    """ Print methods """
+    def __str__(self):
+        print "Printing flow details..."
+        print "Data size:", self.data_size
+        print "Source:", self.src
+        print "Destination:", self.dest
+        return ""
+
+    
