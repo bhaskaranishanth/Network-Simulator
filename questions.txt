@@ -7,3 +7,5 @@ Do we only report congestion after the end of the entire program? Or do we repor
 How do we understand time in this simulation?
 
 Same time events? How does it work?
+
+Can we have IP as strings?

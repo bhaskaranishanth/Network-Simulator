@@ -15,12 +15,60 @@ class Event:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-	def __init__(self, event_type, initialTime, src = None, dest = None, flow = None):
+	def __init__(self, event_type, initial_time, src = None, dest = None, flow = None):
 		self.check_type(event_type)
 		self.type = event_type
 		self.src = src
 		self.dest = dest 
 		self.flow = flow
+		self.initial_time = initial_time
 
 	def check_type(self, event_type):
         assert event_type in [TIMEOUT_EVENT, ENQUEUE_EVENT, NORMAL_EVENT]
+
+
+    """ MUTATOR METHODS """
+
+    def get_type(self):
+        return type_dict[self.type]
+
+    def get_src(self):
+        return self.src
+
+    def get_dest(self):
+        return self.dest
+
+    def get_initial_time(self):
+    	return self.initial_time
+
+    def get_flow(self):
+    	return self.flow
+
+    """ ACCESSOR METHODS """
+
+    def set_type(self, event_type):
+        self.check_type(event_type)
+        self.type = event_type
+
+    def set_src(self, src):
+        self.src = src
+
+    def set_dest(self, dest):
+        self.dest = dest
+
+    def set_flow(self, flow):
+    	self.flow = flow
+
+    def set_initial_time(self, initial_time):
+    	self.flow = initial_time
+
+
+    """ PRINT METHODS """
+    def __str__(self):
+        print "Printing Event Details"
+        print "Type: ", type_dict[self.type]
+        print "Source: ", self.src
+        print "Destination: ", self.dest
+        print "Flow: ", self.flow
+        print "Initial Time: ", initial_time
+        return ""
