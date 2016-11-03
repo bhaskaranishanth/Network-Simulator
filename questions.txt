@@ -1,0 +1,9 @@
+How does dynamic routing work because neither TCP Reno nor TCP Vegas change routing tables; they just change the window size.
+
+How exactly does the event queue work if they are happening at different times?
+
+Do we only report congestion after the end of the entire program? Or do we report it mid way too? 
+
+How do we understand time in this simulation?
+
+Same time events? How does it work?
