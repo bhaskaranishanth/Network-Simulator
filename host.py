@@ -11,10 +11,16 @@ class Host:
         '''
         Attach link to the host.
         '''
+        assert self.link == None
         self.link = link
         
 
     def get_link(self):
         return self.link
 
-    
+    def __str__(self):
+        s = [
+         'Host Details: ' + str(self.ip),
+         'Link: ' + self.link.link_id,
+        ]
+        return '\n'.join(s)

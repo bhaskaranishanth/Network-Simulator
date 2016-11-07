@@ -3,7 +3,8 @@ class Link:
     """
     Represents Link.
     """
-    def __init__(self, length, buf, prop_time, trans_time, congestion, direction):
+    def __init__(self, link_id, length, buf, prop_time, trans_time, congestion, direction):
+        self.link_id = link_id
         self.length = length
         self.buf = buf
         self.prop_time = prop_time
@@ -14,26 +15,29 @@ class Link:
         self.src = None
         self.dst = None
 
-    def connect(src, dst):
+    def connect(self, src, dst):
         '''
         Uses the link to connect the src and dst.
         '''
         self.src = src
         self.dst = dst
 
-    def get_endpoints():
+    def get_endpoints(self):
         '''
         Return endpoints of the nodes
         '''
         return (self.src, self.dst)
 
     def __str__(self):
-        print 'Link details'
-        print 'Length: ', self.length
-        print 'Buffer: ', self.buf
-        print 'Propagation Time: ', self.prop_time
-        print 'Transmission Time: ', self.trans_time
-        print 'Congestion: ', self.congestion
-        print 'Direction: ', self.direction
-        print 'Source: ', self.src
-        print 'Destination: ', self.dst
+        s = [
+         'Link Details: ' + str(self.link_id),
+         'Length: ' + str(self.length),
+         'Buffer: ' + str(self.buf),
+         'Propagation Time: ' + str(self.prop_time),
+         'Transmission Time: ' + str(self.trans_time),
+         'Congestion: ' + str(self.congestion),
+         'Direction: ' + str(self.direction),
+         'Source: ' + str(self.src),
+         'Destination: ' + str(self.dst)
+        ]
+        return ''

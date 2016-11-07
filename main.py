@@ -1,11 +1,78 @@
 from constants import *
+from router import *
+from link import *
+from host import *
+from utilities import *
+from pprint import pprint
 
-# def process_input():
+def process_input():
+    host_f = open(HOST_FILE, 'r')
+    host_f.readline()
+    hosts = {}
+    for line in host_f:
+        hosts[line.strip()] = Host(line.strip())
+
+    router_f = open(ROUTER_FILE, 'r')
+    router_f.readline()
+    routers = {}
+    for line in router_f:
+        routers[line.strip()] = Router(line.strip())
+
+    link_f = open(LINK_FILE, 'r')
+    link_f.readline()
+    links = {}
+    for line in link_f:
+        attrs = line.strip().split('|')
+        link_id, src, dst, trans_time, prop_time, buf = attrs
+        congestion = None
+        direction = None
+        length = None
+        assert src in hosts or src in routers, 'Endpoint is invalid'
+        assert dst in hosts or dst in routers, 'Endpoint is invalid'
+
+        # Create two way links
+        src_node = hosts[src] if src in hosts else routers[src]
+        dst_node = hosts[dst] if dst in hosts else routers[dst]
+        l = Link(link_id, length, buf, prop_time, trans_time, congestion, direction)
+        l.connect(src_node, dst_node)
+        links[link_id] = l
+
+        # Set up links for routers and hosts
+        if src in routers:
+            routers[src].add_link(l)
+        else:
+            hosts[src].attach_link(l)
+        if dst in routers:
+            routers[dst].add_link(l)
+        else:
+            hosts[dst].attach_link(l)
+
+
+
+
+#     def __init__(self, length, buf, prop_time, trans_time, congestion, direction):
+
+# Link ID|Endpoint|Endpoint|Link Rate|Link Delay|Link Buffer
+
+#         links[attrs[0]] = attrs[1:]
+
+    # Create Hosts
+
+    return hosts, routers, links
     
 
 
 
 
 if __name__ == '__main__':
-    process_input()
+    hosts, routers, links = process_input()
+
+    print_host(hosts)
+    print_router(routers)
+    print_link(links)
+    # print_dict(routers)
+    # print_dict(links)
+
+    # print hosts, routers, links 
+
 
