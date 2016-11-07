@@ -1,25 +1,8 @@
 
-def print_dict(d):
-    print 'Dictionary...'
+def print_dict(d, dict_type):
+    print '-' * 80
+    print dict_type
     for k in d:
-        print 'Key: %s Value: %s' % (k, d[k])
-
-
-def print_host(h):
-    print 'Hosts..........'
+        print d[k]
+        print
     print '-' * 80
-    for k in h:
-        print h[k]
-
-def print_router(r):
-    print 'Router..........'
-    print '-' * 80
-    for k in r:
-        print r[k]
-
-
-def print_link(l):
-    print 'Link'
-    print '-' * 80
-    for k in l:
-        print l[k]

@@ -1,3 +1,3 @@
-HOST_FILE = './conf/host.conf'
-ROUTER_FILE = './conf/router.conf'
-LINK_FILE = './conf/link.conf'
+HOST_FILE = './conf/host1.conf'
+ROUTER_FILE = './conf/router1.conf'
+LINK_FILE = './conf/link1.conf'

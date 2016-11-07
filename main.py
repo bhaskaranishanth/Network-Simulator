@@ -47,17 +47,6 @@ def process_input():
         else:
             hosts[dst].attach_link(l)
 
-
-
-
-#     def __init__(self, length, buf, prop_time, trans_time, congestion, direction):
-
-# Link ID|Endpoint|Endpoint|Link Rate|Link Delay|Link Buffer
-
-#         links[attrs[0]] = attrs[1:]
-
-    # Create Hosts
-
     return hosts, routers, links
     
 
@@ -67,12 +56,8 @@ def process_input():
 if __name__ == '__main__':
     hosts, routers, links = process_input()
 
-    print_host(hosts)
-    print_router(routers)
-    print_link(links)
-    # print_dict(routers)
-    # print_dict(links)
-
-    # print hosts, routers, links 
+    print_dict(hosts, 'HOSTS')
+    print_dict(routers, 'ROUTERS')
+    print_dict(links, 'LINKS')
 
 

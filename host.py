@@ -20,7 +20,10 @@ class Host:
 
     def __str__(self):
         s = [
-         'Host Details: ' + str(self.ip),
-         'Link: ' + self.link.link_id,
+        'Host IP: ' + self.ip,
+        'Link ID: ' + self.link.link_id,
         ]
         return '\n'.join(s)
+
+    def __repr__(self):
+        return str(self)

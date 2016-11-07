@@ -1,3 +1,4 @@
+from host import *
 
 class Router:
     """
@@ -6,7 +7,8 @@ class Router:
     def __init__(self, ip):
         self.ip = ip
         self.table = None
-        self.lst = set()
+        # List of links
+        self.link_lst = set()
 
     def set_routing_table(self, table):
         self.table = table
@@ -18,17 +20,41 @@ class Router:
         ''' 
         Adds a Link object to the list
         '''
-        self.lst.add(link)
+        self.link_lst.add(link)
 
     def get_links(self):
         '''
         Returns a list of Link objects
         '''
-        return self.lst
+        return self.link_lst
 
+    def get_hosts(self):
+        '''
+        Returns a list of Hosts connected to this router.
+        '''
+        h = []
+        for link in self.link_lst:
+            src, dst = link.get_endpoints()
+            assert self == src or self == dst
+            if isinstance(src, Host):
+                h.append(src)
+            if isinstance(dst, Host):
+                h.append(dst)
+        return h
 
     def __str__(self):
-        print 'Routing details'
-        print 'IP: ', self.ip
-        print 'Routing table: ', self.table
-        return ''
+        s = [
+        'Router IP: ' + self.ip,
+        'Routing Table: ' + str(self.table),
+        ]
+        return '\n'.join(s)
+
+    def __repr__(self):
+        return str(self)
+
+
+
+
+
+
+

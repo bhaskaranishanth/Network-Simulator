@@ -1,3 +1,5 @@
+from router import *
+from host import *
 
 class Link:
     """
@@ -12,6 +14,7 @@ class Link:
         self.congestion = congestion
         self.direction = direction
 
+        # Source and destinations are either Routers or Hosts
         self.src = None
         self.dst = None
 
@@ -19,6 +22,8 @@ class Link:
         '''
         Uses the link to connect the src and dst.
         '''
+        assert isinstance(src, Router) or isinstance(src, Host)
+        assert isinstance(dst, Router) or isinstance(dst, Host)
         self.src = src
         self.dst = dst
 
@@ -37,7 +42,14 @@ class Link:
          'Transmission Time: ' + str(self.trans_time),
          'Congestion: ' + str(self.congestion),
          'Direction: ' + str(self.direction),
-         'Source: ' + str(self.src),
-         'Destination: ' + str(self.dst)
+         'Source: ' + str(self.src.ip),
+         'Destination: ' + str(self.dst.ip)
         ]
-        return ''
+        return '\n'.join(s)
+
+    def __repr__(self):
+        return str(self)
+
+
+
+
