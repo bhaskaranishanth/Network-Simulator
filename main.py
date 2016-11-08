@@ -5,6 +5,8 @@ from host import *
 from utilities import *
 from pprint import pprint
 
+from eventqueue import *
+
 INF = float('inf')
 
 def process_input():
