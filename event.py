@@ -15,7 +15,7 @@ class Event:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-	def __init__(self, event_type, initial_time, src = None, dest = None, flow = None):
+	def __init__(self, event_type, initial_time, src, dest, flow):
 		self.check_type(event_type)
 		self.type = event_type
 		self.src = src

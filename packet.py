@@ -19,7 +19,7 @@ class Packet:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-    def __init__(self, packet_type, payload=0, src=None, dest=None):
+    def __init__(self, packet_type, payload, src, dest):
         self.check_type(packet_type)
         self.type = packet_type
         self.set_capacity()
