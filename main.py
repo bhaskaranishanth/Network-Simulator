@@ -5,9 +5,8 @@ from host import *
 from utilities import *
 from pprint import pprint
 
-from eventqueue import *
 
-INF = float('inf')
+from eventqueue import *
 
 def process_input():
     host_f = open(HOST_FILE, 'r')

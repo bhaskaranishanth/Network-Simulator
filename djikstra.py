@@ -1,3 +1,6 @@
+
+INF = float('inf')
+
 class Djikstra():
     'Class for initializing '
     def __init__(self):
