@@ -5,6 +5,8 @@ from host import *
 from utilities import *
 from pprint import pprint
 
+INF = float('inf')
+
 def process_input():
     host_f = open(HOST_FILE, 'r')
     host_f.readline()
@@ -48,9 +50,6 @@ def process_input():
             hosts[dst].attach_link(l)
 
     return hosts, routers, links
-    
-
-
 
 
 if __name__ == '__main__':
