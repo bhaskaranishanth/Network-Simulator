@@ -25,7 +25,7 @@ class Djikstra():
             for link in min_node.get_links():
                 endpoints = link.get_endpoints()
                 dest = endpoints[0] if endpoints[1] == min_node else endpoints[1]
-                alt = dist[min_node] + link.getWeight()
+                alt = dist[min_node] + link.get_weight()
                 if alt < dist[dest]:
                     dist[dest] = alt 
                     prev[dest] = min_node

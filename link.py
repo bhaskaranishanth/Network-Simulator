@@ -33,6 +33,12 @@ class Link:
         '''
         return (self.src, self.dst)
 
+    def get_weight(self):
+        '''
+        Return weight of link.
+        '''
+        return self.length
+
     def __str__(self):
         s = [
          'Link Details: ' + str(self.link_id),
