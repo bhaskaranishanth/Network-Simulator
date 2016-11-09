@@ -2,6 +2,7 @@ from constants import *
 from router import *
 from link import *
 from host import *
+from flow import *
 from utilities import *
 from pprint import pprint
 
@@ -50,14 +51,26 @@ def process_input():
         else:
             hosts[dst].attach_link(l)
 
-    return hosts, routers, links
+    flow_f = open(FLOW_FILE, 'r')
+    flow_f.readline()
+    flows = {}
+    for line in flow_f:
+        flow_id, src, dst, data_amt, flow_start = line.strip().split('|')
+        flows[flow_id] = Flow(flow_id, data_amt, src, dst, flow_start)
+
+
+# Flow ID|Flow Src|Flow Dest|Data Amt|Flow Start
+# F1|H1|H2|20|.5
+
+    return hosts, routers, links, flows
 
 
 if __name__ == '__main__':
-    hosts, routers, links = process_input()
+    hosts, routers, links, flows = process_input()
 
     print_dict(hosts, 'HOSTS')
     print_dict(routers, 'ROUTERS')
     print_dict(links, 'LINKS')
+    print_dict(flows, 'FLOWS')
 
 
