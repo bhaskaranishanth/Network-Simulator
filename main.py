@@ -58,10 +58,6 @@ def process_input():
         flow_id, src, dst, data_amt, flow_start = line.strip().split('|')
         flows[flow_id] = Flow(flow_id, data_amt, src, dst, flow_start)
 
-
-# Flow ID|Flow Src|Flow Dest|Data Amt|Flow Start
-# F1|H1|H2|20|.5
-
     return hosts, routers, links, flows
 
 

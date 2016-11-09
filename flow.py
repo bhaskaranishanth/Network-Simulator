@@ -66,8 +66,8 @@ class Flow:
     def __str__(self):
         print "Printing flow details..."
         print "Data size:", self.data_size
-        print "Source:", self.src
-        print "Destination:", self.dest
+        print "Source:", self.flow_src
+        print "Destination:", self.flow_dest
         return ""
 
     
