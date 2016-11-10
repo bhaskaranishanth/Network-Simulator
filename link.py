@@ -37,25 +37,22 @@ class Link:
         '''
         Return weight of link.
         '''
+        if self.length == None:
+            self.length = 1
         return self.length
 
     def __str__(self):
-        s = [
-         'Link Details: ' + str(self.link_id),
-         'Length: ' + str(self.length),
-         'Buffer: ' + str(self.buf),
-         'Propagation Time: ' + str(self.prop_time),
-         'Transmission Time: ' + str(self.trans_time),
-         'Congestion: ' + str(self.congestion),
-         'Direction: ' + str(self.direction),
-         'Source: ' + str(self.src.ip),
-         'Destination: ' + str(self.dst.ip)
-        ]
-        return '\n'.join(s)
+        print 'Length: ' + str(self.length)
+        print 'Buffer: ' + str(self.buf)
+        print 'Propagation Time: ' + str(self.prop_time)
+        print 'Transmission Time: ' + str(self.trans_time)
+        print 'Congestion: ' + str(self.congestion)
+        print 'Direction: ' + str(self.direction)
+        print 'Source: ' + str(self.src.ip)
+        print 'Destination: ' + str(self.dst.ip)
+        return ''
 
     def __repr__(self):
-        return str(self)
-
-
+        return self.link_id
 
 

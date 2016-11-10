@@ -5,7 +5,7 @@ from host import *
 from flow import *
 from utilities import *
 from pprint import pprint
-
+from djikstra import *
 
 from eventqueue import *
 
@@ -69,4 +69,11 @@ if __name__ == '__main__':
     print_dict(links, 'LINKS')
     print_dict(flows, 'FLOWS')
 
+    d = Djikstra()
+    d.update_routing_table(routers.values())
+    print_dict(routers, 'ROUTERS')
+    # pprint(d.gen_routing_table(routers['R1'], routers.values()))
+    # d.gen_routing_table(routers['R1'], routers.values())
+    # print routers
+    # def gen_routing_table(self, source_router, routers):
 

@@ -18,12 +18,17 @@ class Host:
     def get_link(self):
         return self.link
 
+    def get_links(self):
+        '''
+        Returns a list representation of the link
+        '''
+
+        return [self.link]
+
     def __str__(self):
-        s = [
-        'Host IP: ' + self.ip,
-        'Link ID: ' + self.link.link_id,
-        ]
-        return '\n'.join(s)
+        print 'Host IP: ' + self.ip
+        print 'Link ID: ' + self.link.link_id
+        return ''
 
     def __repr__(self):
-        return str(self)
+        return self.ip

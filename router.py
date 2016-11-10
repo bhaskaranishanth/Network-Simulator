@@ -43,14 +43,12 @@ class Router:
         return h
 
     def __str__(self):
-        s = [
-        'Router IP: ' + self.ip,
-        'Routing Table: ' + str(self.table),
-        ]
-        return '\n'.join(s)
+        print 'Router IP: ' + self.ip
+        print 'Routing Table: ' + str(self.table)
+        return ''
 
     def __repr__(self):
-        return str(self)
+        return self.ip
 
 
 
