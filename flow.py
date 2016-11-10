@@ -8,10 +8,10 @@ class Flow:
         (data_size), source, destination, and start time of the flow
         """
         self.flow_id = flow_id
-        self.data_size = data_size
+        self.data_size = float(data_size)
         self.flow_src = flow_src
         self.flow_dest = flow_dest
-        self.flow_start = flow_start
+        self.flow_start = float(flow_start)
 
     
     """ Accessor methods """
@@ -54,10 +54,9 @@ class Flow:
 
     def gen_packets(self):
         packets = []
-        n = math.ceil(self.data_size * 10**6 / MESSAGE_SIZE)
-
+        n = int(ceil(self.data_size * 10**6 / MESSAGE_SIZE))
         for i in range(n):
-            p = Packet(0, MESSAGE_SIZE, self.get_src(), self.get_dest())
+            p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest())
             packets.append(p)
 
         return packets, self.get_start()

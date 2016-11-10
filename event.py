@@ -15,15 +15,16 @@ class Event:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-	def __init__(self, event_type, initial_time, src, dest, flow):
-		self.check_type(event_type)
-		self.type = event_type
-		self.src = src
-		self.dest = dest 
-		self.flow = flow
-		self.initial_time = initial_time
+    def __init__(self, event_type, initial_time, src, dest, flow, data):
+        self.check_type(event_type)
+        self.type = event_type
+        self.src = src
+        self.dest = dest 
+        self.flow = flow
+        self.initial_time = initial_time
+        self.event_data = data
 
-	def check_type(self, event_type):
+    def check_type(self, event_type):
         assert event_type in [TIMEOUT_EVENT, ENQUEUE_EVENT, NORMAL_EVENT]
 
 
@@ -39,10 +40,13 @@ class Event:
         return self.dest
 
     def get_initial_time(self):
-    	return self.initial_time
+        return self.initial_time
 
     def get_flow(self):
-    	return self.flow
+        return self.flow
+
+    def get_data(self):
+        return self.event_data
 
     """ ACCESSOR METHODS """
 
@@ -57,10 +61,13 @@ class Event:
         self.dest = dest
 
     def set_flow(self, flow):
-    	self.flow = flow
+        self.flow = flow
 
     def set_initial_time(self, initial_time):
-    	self.flow = initial_time
+        self.flow = initial_time
+
+    def set_data(self, data):
+        self.event_data = data
 
 
     """ PRINT METHODS """

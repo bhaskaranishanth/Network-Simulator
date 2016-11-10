@@ -8,6 +8,7 @@ from pprint import pprint
 from djikstra import *
 
 from eventqueue import *
+from event import *
 
 def process_input():
     host_f = open(HOST_FILE, 'r')
@@ -60,6 +61,17 @@ def process_input():
 
     return hosts, routers, links, flows
 
+def create_events(flows):
+    """ Returns map of flow_id and events. """
+    event_data = {}
+    for key in flows.keys():
+        event_list = []
+        for packet in flows[key].gen_packets()[0]:
+            newEvent = Event(ENQUEUE_EVENT, 0, flows[key].get_src(), flows[key].get_dest(), flows[key], packet)
+            event_list.append(newEvent)
+        event_data[key] = event_list
+    return event_data
+
 
 if __name__ == '__main__':
     hosts, routers, links, flows = process_input()
@@ -68,6 +80,9 @@ if __name__ == '__main__':
     print_dict(routers, 'ROUTERS')
     print_dict(links, 'LINKS')
     print_dict(flows, 'FLOWS')
+
+    # Create events from the flows
+    flow_events_map = create_events(flows)
 
     d = Djikstra()
     d.update_routing_table(routers.values())
