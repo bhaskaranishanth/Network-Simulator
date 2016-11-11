@@ -61,19 +61,6 @@ def process_input():
 
     return hosts, routers, links, flows
 
-# def create_events(flows, hosts):
-#     """ Returns map of flow_id and events. """
-#     # event_data = {}
-#     for key in flows.keys():
-#         event_list = []
-#         for packet in flows[key].gen_packets()[0]:
-#             hosts[flows[key].get_src()].insert_packet(packet)
-
-#         #     newEvent = Event(PACKET_TO_BUFFER, 0, flows[key].get_src(), flows[key].get_dest(), flows[key], packet)
-#         #     event_list.append(newEvent)
-#         # event_data[key] = event_list
-#     # return event_data   
-
 def initialize_packets(flows, hosts):
     for key in flows:
         event_list = []
@@ -82,8 +69,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 2:
-                break
+            # if count == 2:
+            #     break
 
 
 
@@ -104,7 +91,7 @@ if __name__ == '__main__':
 
     timeout_val = 5
 
-    window_size = 1
+    window_size = 5
     initialize_packets(flows, hosts)
     for host_id in hosts:
         link = hosts[host_id].get_link()
@@ -126,21 +113,12 @@ if __name__ == '__main__':
             # TODO
 
 
-    # # Create events from the flows
-    # flow_events_map = create_events(flows)
-    # for v in flow_events_map.values():
-    #     for e in e_lst:
-    #         eq.put((0, e))
-    #         break
-
-
-
-
 ######## Link might need both directions because one links buffer might be full 
 #### while on the other direction, it can be full too
 ####### It may be possible for ack packets to come back out of order
 ####### Timeout event happens first, then ack packet is received.
 ###### Flow has its own start time
+###### Do acknowledgement packets need to be in the buffer
 
     global_time = 0
     acknowledged_packets = {}
@@ -151,9 +129,11 @@ if __name__ == '__main__':
     # Continuously pull events from the priority queue
     link_transfer_time = 1
     while eq.qsize() != 0:
+        print 'Queue size: ', eq.qsize()
         t, event_top = eq.get()
         assert t != None
         global_time = t
+        print t, event_top
 
         if event_top.get_type() == LINK_TO_ENDPOINT:
             if event_top.get_data().get_curr_loc() in routers:
@@ -222,6 +202,9 @@ if __name__ == '__main__':
                 if curr_packet.get_type() == ACK_PACKET:
                     print 'Acknowledged this shit'
 
+
+
+
                     # Insert acknowledgement into dictionary
                     if curr_packet.packet_id in acknowledged_packets:
                         acknowledged_packets[curr_packet.packet_id] += 1
@@ -249,14 +232,32 @@ if __name__ == '__main__':
                     # Other packets
                     print 'Received host'
 
-                    dst_time = global_time + link_transfer_time
-                    curr_link.update_next_free_time(dst_time)
+                    # dst_time = global_time + link_transfer_time
+                    # curr_link.update_next_free_time(dst_time)
 
-                    p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
-                    p.packet_id = curr_packet.packet_id
+                    # p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
+                    # p.packet_id = curr_packet.packet_id
 
-                    new_event = Event(PACKET_RECIEVED, dst_time, p.get_src(), p.get_dest(), None, p)
-                    eq.put((new_event.get_initial_time(), new_event))
+
+                    if curr_link.get_free_time() <= t:
+                        print 'Running...'
+                        dst_time = global_time + link_transfer_time
+                        curr_link.update_next_free_time(dst_time)
+                        p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
+                        p.packet_id = curr_packet.packet_id
+                        
+                        new_event = Event(PACKET_RECIEVED, dst_time, p.get_src(), p.get_dest(), None, p)
+                        eq.put((new_event.get_initial_time(), new_event))
+
+                        # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
+                        # new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                        # eq.put((new_event.get_initial_time(), new_event))
+                    else:
+                        print 'Waiting....'
+                        event_top.initial_time = curr_link.get_free_time()
+                        eq.put((event_top.initial_time, event_top))
+
+
 
 
         elif event_top.get_type() == TIMEOUT_EVENT:
@@ -283,15 +284,10 @@ if __name__ == '__main__':
         else:
             assert False
 
-        print t, event_top
-        # print eq.queue
+        # print t, event_top
+        # print eq.qsize()
         # break
 
     print 'Completed everything '
 
-
-    # pprint(d.gen_routing_table(routers['R1'], routers.values()))
-    # d.gen_routing_table(routers['R1'], routers.values())
-    # print routers
-    # def gen_routing_table(self, source_router, routers):
 
