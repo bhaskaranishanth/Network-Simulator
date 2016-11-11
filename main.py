@@ -140,6 +140,7 @@ if __name__ == '__main__':
 #### while on the other direction, it can be full too
 ####### It may be possible for ack packets to come back out of order
 ####### Timeout event happens first, then ack packet is received.
+###### Flow has its own start time
 
     global_time = 0
     acknowledged_packets = {}
@@ -148,7 +149,7 @@ if __name__ == '__main__':
 #     timeout_val = 1
 
     # Continuously pull events from the priority queue
-    link_transfer_time = 10
+    link_transfer_time = 1
     while eq.qsize() != 0:
         t, event_top = eq.get()
         assert t != None
@@ -230,7 +231,7 @@ if __name__ == '__main__':
                     # Convert packet from host queue into event and insert into buffer
                     curr_link.dec_packet()
                     if int(curr_link.buf) > window_size:
-                        assert curr_link.get_num_packets() - window_size == -1
+                        assert curr_link.get_num_packets() - window_size < 0
                         while curr_link.get_num_packets() < window_size:
                             pkt = curr_host.remove_packet()
                             if pkt != None:
