@@ -28,6 +28,16 @@ class Router:
         '''
         return self.link_lst
 
+    def get_link_for_dest(self, dest):
+        for x in self.link_lst:
+            src, dst = x.get_endpoints()
+            if src == dest or dst == dest:
+                return x
+        assert False
+
+    def get_ip(self):
+        return self.ip
+
     def get_hosts(self):
         '''
         Returns a list of Hosts connected to this router.

@@ -1,3 +1,4 @@
+from Queue import Queue
 
 class Host:
     """
@@ -6,6 +7,7 @@ class Host:
     def __init__(self, ip):
         self.ip = ip
         self.link = None
+        self.q = Queue()
 
     def attach_link(self, link):
         '''
@@ -24,6 +26,18 @@ class Host:
         '''
 
         return [self.link]
+
+    def get_ip(self):
+        return self.ip
+
+    def insert_packet(self, packet):
+        self.q.put(packet)
+
+    def remove_packet(self):
+        if self.q.empty():
+            return None
+        else:
+            return self.q.get()
 
     def __str__(self):
         print 'Host IP: ' + self.ip

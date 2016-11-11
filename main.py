@@ -6,7 +6,7 @@ from flow import *
 from utilities import *
 from pprint import pprint
 from djikstra import *
-
+from event import *
 from eventqueue import *
 from event import *
 
@@ -61,16 +61,31 @@ def process_input():
 
     return hosts, routers, links, flows
 
-def create_events(flows):
-    """ Returns map of flow_id and events. """
-    event_data = {}
-    for key in flows.keys():
+# def create_events(flows, hosts):
+#     """ Returns map of flow_id and events. """
+#     # event_data = {}
+#     for key in flows.keys():
+#         event_list = []
+#         for packet in flows[key].gen_packets()[0]:
+#             hosts[flows[key].get_src()].insert_packet(packet)
+
+#         #     newEvent = Event(PACKET_TO_BUFFER, 0, flows[key].get_src(), flows[key].get_dest(), flows[key], packet)
+#         #     event_list.append(newEvent)
+#         # event_data[key] = event_list
+#     # return event_data   
+
+def initialize_packets(flows, hosts):
+    for key in flows:
         event_list = []
+        count = 0
         for packet in flows[key].gen_packets()[0]:
-            newEvent = Event(ENQUEUE_EVENT, 0, flows[key].get_src(), flows[key].get_dest(), flows[key], packet)
-            event_list.append(newEvent)
-        event_data[key] = event_list
-    return event_data
+            count += 1
+            hosts[flows[key].get_src()].insert_packet(packet)
+
+            if count == 2:
+                break
+
+
 
 
 if __name__ == '__main__':
@@ -81,12 +96,199 @@ if __name__ == '__main__':
     print_dict(links, 'LINKS')
     print_dict(flows, 'FLOWS')
 
-    # Create events from the flows
-    flow_events_map = create_events(flows)
-
+    # Create routing table
     d = Djikstra()
     d.update_routing_table(routers.values())
     print_dict(routers, 'ROUTERS')
+
+
+    timeout_val = 5
+
+    window_size = 1
+    initialize_packets(flows, hosts)
+    for host_id in hosts:
+        link = hosts[host_id].get_link()
+        if int(link.buf) > window_size:
+            while link.get_num_packets() < window_size:
+                curr_packet = hosts[host_id].remove_packet()
+                if curr_packet != None:
+                    link.inc_packet()
+                    new_event = Event(LINK_TO_ENDPOINT, 0, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                    eq.put((new_event.get_initial_time(), new_event))
+
+                    timeout_event = Event(TIMEOUT_EVENT, timeout_val, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                    eq.put((timeout_event.get_initial_time(), timeout_event))
+                else:
+                    break
+
+        else:
+            pass
+            # TODO
+
+
+    # # Create events from the flows
+    # flow_events_map = create_events(flows)
+    # for v in flow_events_map.values():
+    #     for e in e_lst:
+    #         eq.put((0, e))
+    #         break
+
+
+
+
+######## Link might need both directions because one links buffer might be full 
+#### while on the other direction, it can be full too
+####### It may be possible for ack packets to come back out of order
+####### Timeout event happens first, then ack packet is received.
+
+    global_time = 0
+    acknowledged_packets = {}
+#     buf_to_link_time = .05
+#     dropped_packets = []
+#     timeout_val = 1
+
+    # Continuously pull events from the priority queue
+    link_transfer_time = 10
+    while eq.qsize() != 0:
+        t, event_top = eq.get()
+        assert t != None
+        global_time = t
+
+        if event_top.get_type() == LINK_TO_ENDPOINT:
+            if event_top.get_data().get_curr_loc() in routers:
+                # curr_packet = event_top.get_data()
+                # curr_router = routers[curr_packet.get_curr_loc()]
+                # next_hop = curr_router.get_routing_table()[curr_packet.get_dest()]
+                # curr_link = curr_router.get_link_for_dest(next_hop)
+
+                # if curr_link.insert_into_buffer(curr_packet.get_capacity()):
+                #     # Fix time shit now length of buffer
+
+                #     dst_time = global_time + buf_to_link_time * curr_link.get_capacity()
+                #     newEvent = Event(BUFFER_TO_LINK, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                #     eq.put((dst_time, newEvent))
+                # else:
+                #     dropped_packets.append(curr_packet)
+
+                # dst_time = global_time + timeout_val
+                # timeout_event = Event(TIMEOUT_EVENT, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                # eq.put((dst_time, newEvent))
+                print 'hello'
+
+            elif event_top.get_data().get_curr_loc() in hosts:
+                curr_host = hosts[event_top.get_data().get_curr_loc()]
+                curr_packet = event_top.get_data()
+                curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
+                # print 'Link free time: ', curr_link.get_free_time()
+                # print 't'
+                if curr_link.get_free_time() <= t:
+                    dst_time = global_time + link_transfer_time
+                    curr_link.update_next_free_time(dst_time)
+                    curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
+                    new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                    eq.put((new_event.get_initial_time(), new_event))
+                else:
+                    event_top.initial_time = curr_link.get_free_time()
+                    eq.put((event_top.initial_time, event_top))
+
+
+                # if curr_link.insert_into_buffer(curr_packet.get_capacity()):
+                #     dst_time = global_time + buf_to_link_time
+                #     newEvent = Event(BUFFER_TO_LINK, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                #     eq.put((dst_time, newEvent))
+                # else:
+                #     dropped_packets.append(curr_packet)
+
+                # dst_time = global_time + timeout_val
+                # timeout_event = Event(TIMEOUT_EVENT, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                # eq.put((dst_time, timeout_event))
+
+            else:
+                assert False
+
+
+        # elif event_top.get_type() == BUFFER_TO_LINK:
+        elif event_top.get_type() == PACKET_RECIEVED:
+            # Router component
+
+
+            # Host component
+            if event_top.get_data().get_curr_loc() in hosts:
+                curr_host = hosts[event_top.get_data().get_curr_loc()]
+                curr_packet = event_top.get_data()
+                curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
+                # Acknowledgment packet
+                if curr_packet.get_type() == ACK_PACKET:
+                    print 'Acknowledged this shit'
+
+                    # Insert acknowledgement into dictionary
+                    if curr_packet.packet_id in acknowledged_packets:
+                        acknowledged_packets[curr_packet.packet_id] += 1
+                    else:
+                        acknowledged_packets[curr_packet.packet_id] = 1
+
+                    # Convert packet from host queue into event and insert into buffer
+                    curr_link.dec_packet()
+                    if int(curr_link.buf) > window_size:
+                        assert curr_link.get_num_packets() - window_size == -1
+                        while curr_link.get_num_packets() < window_size:
+                            pkt = curr_host.remove_packet()
+                            if pkt != None:
+                                curr_link.inc_packet()
+                                new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                eq.put((new_event.get_initial_time(), new_event))
+
+                                dst_time = global_time + timeout_val
+                                timeout_event = Event(TIMEOUT_EVENT, dst_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                eq.put((timeout_event.get_initial_time(), timeout_event))
+                            else:
+                                break
+
+                else:
+                    # Other packets
+                    print 'Received host'
+
+                    dst_time = global_time + link_transfer_time
+                    curr_link.update_next_free_time(dst_time)
+
+                    p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
+                    p.packet_id = curr_packet.packet_id
+
+                    new_event = Event(PACKET_RECIEVED, dst_time, p.get_src(), p.get_dest(), None, p)
+                    eq.put((new_event.get_initial_time(), new_event))
+
+
+        elif event_top.get_type() == TIMEOUT_EVENT:
+            curr_packet = event_top.get_data()
+            curr_host = hosts[event_top.get_src()]
+            p_id = curr_packet.packet_id
+            # Packet was acknowledged beforehand
+            if p_id in acknowledged_packets:
+                if acknowledged_packets[p_id] == 1:
+                    del acknowledged_packets[p_id]
+                else:
+                    acknowledged_packets[p_id] -= 1
+            else:
+                # Create new packet and insert into host's queue
+                p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_link.get_link_endpoint(curr_host))
+                p.packet_id = curr_packet.packet_id
+                curr_host.insert_packet(p)
+
+            print 'Timeout happened!!!!!'
+
+            print 'Other'
+
+
+        else:
+            assert False
+
+        print t, event_top
+        # print eq.queue
+        # break
+
+    print 'Completed everything '
+
+
     # pprint(d.gen_routing_table(routers['R1'], routers.values()))
     # d.gen_routing_table(routers['R1'], routers.values())
     # print routers

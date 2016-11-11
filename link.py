@@ -14,6 +14,10 @@ class Link:
         self.congestion = congestion
         self.direction = direction
 
+        self.capacity = 0
+        self.num_packets = 0
+        self.next_free_time = -1
+
         # Source and destinations are either Routers or Hosts
         self.src = None
         self.dst = None
@@ -33,6 +37,9 @@ class Link:
         '''
         return (self.src, self.dst)
 
+    def get_link_endpoint(self, start):
+        return self.src.get_ip() if self.src == start else self.dst.get_ip()
+
     def get_weight(self):
         '''
         Return weight of link.
@@ -40,6 +47,29 @@ class Link:
         if self.length == None:
             self.length = 1
         return self.length
+
+    def insert_into_buffer(self, packet_size):
+        if self.capacity + packet_size > self.buf:
+            return False
+        else:
+            self.capacity += packet_size
+            return True
+
+    def get_num_packets(self):
+        return self.num_packets
+
+    def inc_packet(self):
+        self.num_packets += 1
+
+    def dec_packet(self):
+        self.num_packets -= 1
+
+    def get_free_time(self):
+        return self.next_free_time
+
+    def update_next_free_time(self, free_time):
+        self.next_free_time = free_time
+
 
     def __str__(self):
         print 'Length: ' + str(self.length)

@@ -1,11 +1,16 @@
 
-TIMEOUT_EVENT = 0
-ENQUEUE_EVENT = 1
-NORMAL_EVENT = 2
+TIMEOUT_EVENT = "TIMEOUT_EVENT"
+PACKET_TO_BUFFER = "PACKET_TO_BUFFER"
+BUFFER_TO_LINK = "BUFFER_TO_LINK"
+LINK_TO_ENDPOINT = "LINK_TO_ENDPOINT"
+PACKET_RECIEVED = "PACKET_RECIEVED"
+ENQUEUE_EVENT = "ENQUEUE_EVENT"
+NORMAL_EVENT = "NORMAL_EVENT"
 
-type_dict = {TIMEOUT_EVENT: "TIMEOUT_EVENT", 
-            ENQUEUE_EVENT : "ENQUEUE_EVENT",
-            NORMAL_EVENT : "NORMAL_EVENT"}
+type_events = [TIMEOUT_EVENT, PACKET_TO_BUFFER, BUFFER_TO_LINK, LINK_TO_ENDPOINT,
+ENQUEUE_EVENT, NORMAL_EVENT, PACKET_RECIEVED]
+
+
 class Event:
     """Defines Event which contains the details about the event type, and 
     the information
@@ -25,13 +30,13 @@ class Event:
         self.event_data = data
 
     def check_type(self, event_type):
-        assert event_type in [TIMEOUT_EVENT, ENQUEUE_EVENT, NORMAL_EVENT]
+        assert event_type in type_events
 
 
     """ MUTATOR METHODS """
 
     def get_type(self):
-        return type_dict[self.type]
+        return self.type
 
     def get_src(self):
         return self.src
@@ -73,9 +78,11 @@ class Event:
     """ PRINT METHODS """
     def __str__(self):
         print "Printing Event Details"
-        print "Type: ", type_dict[self.type]
+        print "Type: ", self.type
         print "Source: ", self.src
         print "Destination: ", self.dest
         print "Flow: ", self.flow
-        print "Initial Time: ", initial_time
+        print "Initial Time: ", self.initial_time
+        print 'Event id: ', id(self)
+        print 'Packet id: ', self.event_data.packet_id
         return ""

@@ -1,14 +1,16 @@
+from router import *
+from host import *
+
 MESSAGE_SIZE = 1024
 ACK_SIZE = 64
 ROUTER_SIZE = 64
 
-MESSAGE_PACKET = 0
-ACK_PACKET = 1
-ROUTER_PACKET = 2
+MESSAGE_PACKET = "MESSAGE_PACKET", 
+ACK_PACKET = "ACK_PACKET",
+ROUTER_PACKET = "ROUTER_PACKET"
 
-type_dict = {MESSAGE_PACKET : "MESSAGE_PACKET", 
-            ACK_PACKET : "ACK_PACKET",
-            ROUTER_PACKET : "ROUTER_PACKET"}
+type_lst = [MESSAGE_PACKET, ACK_PACKET, ROUTER_PACKET]
+
 
 class Packet:
     """Defines a Packet class which contains details about the
@@ -28,7 +30,9 @@ class Packet:
         self.payload = payload
         self.src = src
         self.dest = dest
+        assert type(curr_loc) == str
         self.curr_loc = curr_loc
+        self.packet_id = id(self)
 
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
@@ -48,7 +52,7 @@ class Packet:
     """ MUTATOR METHODS """
 
     def get_type(self):
-        return type_dict[self.type]
+        return self.type
 
     def get_capacity(self):
         return self.capacity
@@ -83,12 +87,13 @@ class Packet:
         self.dest = dest
 
     def set_curr_loc(self, curr_loc):
+        assert type(curr_loc) == str
         self.curr_loc = curr_loc
 
     """ PRINT METHODS """
     def __str__(self):
         print "Printing Packet Details"
-        print "Type: ", type_dict[self.type]
+        print "Type: ", self.type
         print "Capacity: ", self.capacity
         print "Payload: ", self.payload
         print "Source: ", self.src
