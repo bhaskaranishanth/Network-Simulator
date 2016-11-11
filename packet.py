@@ -19,7 +19,7 @@ class Packet:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-    def __init__(self, packet_type, payload, src, dest):
+    def __init__(self, packet_type, payload, src, dest, curr_loc):
         self.check_type(packet_type)
         self.type = packet_type
         self.set_capacity()
@@ -28,6 +28,7 @@ class Packet:
         self.payload = payload
         self.src = src
         self.dest = dest
+        self.curr_loc = curr_loc
 
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
@@ -61,6 +62,9 @@ class Packet:
     def get_dest(self):
         return self.dest
 
+    def get_curr_loc(self):
+        return self.curr_loc
+
 
     """ ACCESSOR METHODS """
 
@@ -78,6 +82,9 @@ class Packet:
     def set_dest(self, dest):
         self.dest = dest
 
+    def set_curr_loc(self, curr_loc):
+        self.curr_loc = curr_loc
+
     """ PRINT METHODS """
     def __str__(self):
         print "Printing Packet Details"
@@ -86,4 +93,5 @@ class Packet:
         print "Payload: ", self.payload
         print "Source: ", self.src
         print "Destination: ", self.dest
+        print "Current Location: ", self.curr_loc
         return ""
