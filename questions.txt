@@ -9,3 +9,10 @@ How do we understand time in this simulation?
 Same time events? How does it work?
 
 Can we have IP as strings?
+
+
+
+
+
+Does the ack packet go through the link as fast as possible?
+It is possible for the ack packets to come out of order, right?

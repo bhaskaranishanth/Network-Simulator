@@ -16,6 +16,7 @@ class Link:
 
         self.capacity = 0
         self.num_packets = 0
+        self.actual_packets = 0
         self.next_free_time = -1
 
         # Source and destinations are either Routers or Hosts
@@ -56,6 +57,9 @@ class Link:
             return True
 
     def get_num_packets(self):
+        '''
+        Number of packets in window.
+        '''
         return self.num_packets
 
     def inc_packet(self):
@@ -63,6 +67,19 @@ class Link:
 
     def dec_packet(self):
         self.num_packets -= 1
+
+    def get_actual_packets(self):
+        '''
+        Actual number of packets in buffer.
+        '''
+        return self.actual_packets
+
+    def inc_actual_packet(self):
+        self.actual_packets += 1
+
+    def dec_actual_packet(self):
+        self.actual_packets -= 1
+
 
     def get_free_time(self):
         return self.next_free_time

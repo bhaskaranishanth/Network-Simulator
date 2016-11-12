@@ -71,10 +71,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-
-            if count == 100:
+            if count == 2:
                 break
-
 
 
 
@@ -95,15 +93,18 @@ if __name__ == '__main__':
 
     timeout_val = 5
 
-    window_size = 5
+    window_size = 2
     initialize_packets(flows, hosts)
     for host_id in hosts:
         link = hosts[host_id].get_link()
         if int(link.buf) > window_size:
+            # Load window number of packets from host queue to buffer
             while link.get_num_packets() < window_size:
                 curr_packet = hosts[host_id].remove_packet()
                 if curr_packet != None:
                     link.inc_packet()
+                    link.inc_actual_packet()
+
                     new_event = Event(LINK_TO_ENDPOINT, 0, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
 
@@ -170,12 +171,18 @@ if __name__ == '__main__':
                 # print 'Link free time: ', curr_link.get_free_time()
                 # print 't'
                 if curr_link.get_free_time() <= t:
+                    # If link free, use link and send a received packet that
+                    # gets completed once it passes through the link
                     dst_time = global_time + link_transfer_time
                     curr_link.update_next_free_time(dst_time)
                     curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
                     new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
+
+                    # Decrease actual packets
+                    link.dec_actual_packet()
                 else:
+                    # Else, update event completion time
                     event_top.initial_time = curr_link.get_free_time()
                     eq.put((event_top.initial_time, event_top))
 
@@ -226,6 +233,9 @@ if __name__ == '__main__':
                             pkt = curr_host.remove_packet()
                             if pkt != None:
                                 curr_link.inc_packet()
+
+                                curr_link.inc_actual_packet()
+
                                 new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
                                 eq.put((new_event.get_initial_time(), new_event))
 
@@ -248,6 +258,8 @@ if __name__ == '__main__':
 
                     if curr_link.get_free_time() <= t:
                         print 'Running...'
+                        # If link free, use link and send a received packet that
+                        # gets completed once it passes through the link
                         dst_time = global_time + link_transfer_time
                         curr_link.update_next_free_time(dst_time)
                         p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
@@ -261,6 +273,7 @@ if __name__ == '__main__':
                         # eq.put((new_event.get_initial_time(), new_event))
                     else:
                         print 'Waiting....'
+                        # Else, update event completion time
                         event_top.initial_time = curr_link.get_free_time()
                         eq.put((event_top.initial_time, event_top))
 
@@ -271,8 +284,8 @@ if __name__ == '__main__':
             curr_packet = event_top.get_data()
             curr_host = hosts[event_top.get_src()]
             p_id = curr_packet.packet_id
-            # Packet was acknowledged beforehand
             if p_id in acknowledged_packets:
+                # Packet was acknowledged beforehand
                 if acknowledged_packets[p_id] == 1:
                     del acknowledged_packets[p_id]
                 else:
@@ -296,6 +309,6 @@ if __name__ == '__main__':
         # break
 
     print 'Completed everything '
-    print(pck_graph)
-    graph(pck_graph)
+    # print(pck_graph)
+    # graph(pck_graph)
 
