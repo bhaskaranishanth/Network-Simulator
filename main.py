@@ -132,13 +132,10 @@ if __name__ == '__main__':
 
     global_time = 0
     acknowledged_packets = {}
-<<<<<<< 5e73bbfdda651e95985aa7bed5185c2fe4b55891
     pck_graph = []
 #     buf_to_link_time = .05
 #     dropped_packets = []
 #     timeout_val = 1
-=======
->>>>>>> Passed test case 0 with window size 1
 
     # Continuously pull events from the priority queue
     link_transfer_time = 1
