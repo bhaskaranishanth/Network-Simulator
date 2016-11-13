@@ -71,7 +71,7 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 2:
+            if count == 1:
                 break
 
 
@@ -98,14 +98,13 @@ if __name__ == '__main__':
     initialize_packets(flows, hosts)
     for host_id in hosts:
         link = hosts[host_id].get_link()
-        if int(link.buf) > window_size:
+        if hosts[host_id].get_window_count() < window_size:
             # Load window number of packets from host queue to buffer
             while link.get_num_packets() < window_size:
                 curr_packet = hosts[host_id].remove_packet()
                 if curr_packet != None:
-                    link.inc_packet()
-                    link.inc_actual_packet()
-
+                    assert link.insert_into_buffer(curr_packet.get_capacity())
+                    hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
                     new_event = Event(LINK_TO_ENDPOINT, 0, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
 
@@ -128,7 +127,7 @@ if __name__ == '__main__':
 ###### Rename get_curr_loc() to be the get_dest_loc() since it is the endpoint, wait i'm confused on this part too
 ###### Create event processing class to handle all different types of events
 ###### Event should only have the current src and dst, packet has total distance, LINK_TO_ENDPOINT is the only exception
-
+###### Implement window counter for each host
 
     global_time = 0
     acknowledged_packets = {}
@@ -147,6 +146,7 @@ if __name__ == '__main__':
         global_time = t
         print t, event_top
 
+        # Send from Link Buffer -> Endpoint
         if event_top.get_type() == LINK_TO_ENDPOINT:
             curr_entity = routers if event_top.get_data().get_curr_loc() in routers else hosts
             curr_src = curr_entity[event_top.get_data().get_curr_loc()]
@@ -160,7 +160,7 @@ if __name__ == '__main__':
             else:
                 assert False
                 print 'Router specific processing...'
-                next_hop = curr_src.get_routing_table()[curr_packet.get_dest()]
+                next_hop = curr_src.get_routing_table()[hosts[curr_packet.get_dest()]]
                 curr_link = curr_src.get_link_for_dest(next_hop)
 
             if curr_link.get_free_time() <= t:
@@ -168,114 +168,39 @@ if __name__ == '__main__':
                 # gets completed once it passes through the link
                 dst_time = global_time + link_transfer_time
                 curr_link.update_next_free_time(dst_time)
+
+                # Compute src and dest locations for event
                 event_src_loc = curr_packet.get_curr_loc()
-                # print 'Curr location: ', curr_packet.get_curr_loc()
-                # print 'Curr host: ', curr_host
                 curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_src))
                 event_dst_loc = curr_packet.get_curr_loc()
-                # print 'Curr location: ', curr_packet.get_curr_loc()
+                print 'Event ', event_src_loc, event_dst_loc
                 new_event = Event(PACKET_RECIEVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
                 eq.put((new_event.get_initial_time(), new_event))
 
-                # Decrease actual packets
-                link.dec_actual_packet()
+                # Remove packets from buffer and decrement count
+                curr_link.remove_from_buffer(curr_packet.get_capacity())
+
             else:
                 # Else, update event completion time
                 event_top.initial_time = curr_link.get_free_time()
                 eq.put((event_top.initial_time, event_top))
 
-
-
-
-            # if event_top.get_data().get_curr_loc() in routers:
-            #     print 'Router specific processing....'
-            #     curr_router = routers[event_top.get_data().get_curr_loc()]
-            #     curr_packet = event_top.get_data()
-
-            #     curr_link = routers[event_top.get_data().get_curr_loc()].get_link()
-            #     # if curr_link.get_free_time() <= t:
-            #     #     # If link free, use link and send a received packet that
-            #     #     # gets completed once it passes through the link
-            #     #     dst_time = global_time + link_transfer_time
-            #     #     curr_link.update_next_free_time(dst_time)
-            #     #     curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
-            #     #     new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
-            #     #     eq.put((new_event.get_initial_time(), new_event))
-
-            #     #     # Decrease actual packets
-            #     #     link.dec_actual_packet()
-            #     # else:
-            #     #     # Else, update event completion time
-            #     #     event_top.initial_time = curr_link.get_free_time()
-            #     #     eq.put((event_top.initial_time, event_top))
-
-
-
-            #     # curr_packet = event_top.get_data()
-            #     # curr_router = routers[curr_packet.get_curr_loc()]
-            #     # next_hop = curr_router.get_routing_table()[curr_packet.get_dest()]
-            #     # curr_link = curr_router.get_link_for_dest(next_hop)
-
-            #     # if curr_link.insert_into_buffer(curr_packet.get_capacity()):
-            #     #     # Fix time shit now length of buffer
-
-            #     #     dst_time = global_time + buf_to_link_time * curr_link.get_capacity()
-            #     #     newEvent = Event(BUFFER_TO_LINK, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
-            #     #     eq.put((dst_time, newEvent))
-            #     # else:
-            #     #     dropped_packets.append(curr_packet)
-
-            #     # dst_time = global_time + timeout_val
-            #     # timeout_event = Event(TIMEOUT_EVENT, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
-            #     # eq.put((dst_time, newEvent))
-            #     print 'hello'
-
-            # elif event_top.get_data().get_curr_loc() in hosts:
-            #     curr_host = hosts[event_top.get_data().get_curr_loc()]
-            #     curr_packet = event_top.get_data()
-            #     curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
-            #     if curr_link.get_free_time() <= t:
-            #         # If link free, use link and send a received packet that
-            #         # gets completed once it passes through the link
-            #         dst_time = global_time + link_transfer_time
-            #         curr_link.update_next_free_time(dst_time)
-            #         event_src_loc = curr_packet.get_curr_loc()
-            #         # print 'Curr location: ', curr_packet.get_curr_loc()
-            #         # print 'Curr host: ', curr_host
-            #         curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
-            #         event_dst_loc = curr_packet.get_curr_loc()
-            #         # print 'Curr location: ', curr_packet.get_curr_loc()
-            #         new_event = Event(PACKET_RECIEVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
-            #         eq.put((new_event.get_initial_time(), new_event))
-
-            #         # Decrease actual packets
-            #         link.dec_actual_packet()
-            #     else:
-            #         # Else, update event completion time
-            #         event_top.initial_time = curr_link.get_free_time()
-            #         eq.put((event_top.initial_time, event_top))
-
-
-            #     # if curr_link.insert_into_buffer(curr_packet.get_capacity()):
-            #     #     dst_time = global_time + buf_to_link_time
-            #     #     newEvent = Event(BUFFER_TO_LINK, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
-            #     #     eq.put((dst_time, newEvent))
-            #     # else:
-            #     #     dropped_packets.append(curr_packet)
-
-            #     # dst_time = global_time + timeout_val
-            #     # timeout_event = Event(TIMEOUT_EVENT, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
-            #     # eq.put((dst_time, timeout_event))
-
-            # else:
-            #     assert False
-
-
-        # elif event_top.get_type() == BUFFER_TO_LINK:
+        # Host or Router receives a packet
         elif event_top.get_type() == PACKET_RECIEVED:
             # Router component
             if event_top.get_data().get_curr_loc() in routers:
-                print 'Packet received in router....'            
+                print 'Packet received in router....'     
+                curr_router = routers[event_top.get_data().get_curr_loc()]
+                curr_packet = event_top.get_data()
+
+                next_hop = curr_router.get_routing_table()[hosts[curr_packet.get_dest()]]
+                curr_link = curr_router.get_link_for_dest(next_hop)
+
+                # if curr_link.get_capacity
+
+
+
+
                 curr_router = routers[event_top.get_data().get_curr_loc()]
                 curr_packet = event_top.get_data()
 
@@ -284,7 +209,7 @@ if __name__ == '__main__':
                 curr_link.dec_packet()
 
                 # Need to compute the next link from routing table
-                dest = curr_router.get_routing_table()[curr_packet.get_dest()]
+                dest = curr_router.get_routing_table()[hosts[curr_packet.get_dest()]]
                 next_link = curr_router.get_link_for_dest(dest)
 
 
@@ -292,22 +217,20 @@ if __name__ == '__main__':
 
                 # If link buffer has space, insert packet into it, else drop packet
                 if next_link.get_num_packets() < MAX_BUFFER_SIZE:
-                    next_link.inc_packet()
-                    next_link.inc_actual_packet()
-
-                    new_event = Event(LINK_TO_ENDPOINT, global_time, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
-                    eq.put((new_event.get_initial_time(), new_event))
+                    if link.insert_into_buffer(curr_packet.get_capacity()):
+                        new_event = Event(LINK_TO_ENDPOINT, global_time, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                        eq.put((new_event.get_initial_time(), new_event))
 
 
 
 
 
-            # Host component
+            # Host receives a packet
             if event_top.get_data().get_curr_loc() in hosts:
                 curr_host = hosts[event_top.get_data().get_curr_loc()]
                 curr_packet = event_top.get_data()
                 curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
-                # Acknowledgment packet
+                # Acknowledgment packet received
                 if curr_packet.get_type() == ACK_PACKET:
                     print 'Acknowledged this shit'
 
@@ -316,23 +239,26 @@ if __name__ == '__main__':
                         acknowledged_packets[curr_packet.packet_id] += 1
                     else:
                         acknowledged_packets[curr_packet.packet_id] = 1
+                        # Perform this ack only based on certain acks
+                        curr_host.set_window_count(curr_host.get_window_count()-1)
 
                     # Convert packet from host queue into event and insert into buffer
-                    curr_link.dec_packet()
-                    if int(curr_link.buf) > window_size:
+                    if curr_host.get_window_count() < window_size:
+
                         assert curr_link.get_num_packets() - window_size < 0
                         while curr_link.get_num_packets() < window_size:
                             pkt = curr_host.remove_packet()
                             if pkt != None:
-                                curr_link.inc_packet()
-                                curr_link.inc_actual_packet()
+                                if link.insert_into_buffer(curr_packet.get_capacity()):
+                                    new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                    eq.put((new_event.get_initial_time(), new_event))
 
-                                new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
-                                eq.put((new_event.get_initial_time(), new_event))
+                                    dst_time = global_time + timeout_val
+                                    timeout_event = Event(TIMEOUT_EVENT, dst_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                    eq.put((timeout_event.get_initial_time(), timeout_event))
 
-                                dst_time = global_time + timeout_val
-                                timeout_event = Event(TIMEOUT_EVENT, dst_time, pkt.get_src(), pkt.get_dest(), None, pkt)
-                                eq.put((timeout_event.get_initial_time(), timeout_event))
+                                    # Increment window count
+                                    curr_host.set_window_count(curr_host.get_window_count()+1)
                             else:
                                 break
 
@@ -353,23 +279,28 @@ if __name__ == '__main__':
 
                         # If link free, use link and send a received packet that
                         # gets completed once it passes through the link
-                        dst_time = global_time + link_transfer_time
-                        curr_link.update_next_free_time(dst_time)
+                        # dst_time = global_time + link_transfer_time
+                        # curr_link.update_next_free_time(dst_time)
+                        dst_time = global_time
 
                         # Make sure the ack packet has the same id as the original packet
-                        p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
+                        p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_packet.get_dest())
                         p.packet_id = curr_packet.packet_id
+                        # p.set_curr_loc(p.get_src())
 
                         # print event_top
                         # print p.get_dest()
                         # print p.get_src()
+                        # print p
 
                         # Determine the event start and end location
                         event_src_loc = p.get_src()
                         event_dst_loc = curr_link.get_link_endpoint(curr_host)
 
-                        new_event = Event(PACKET_RECIEVED, dst_time, event_src_loc, event_dst_loc, None, p)
+                        new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, None, p)
                         eq.put((new_event.get_initial_time(), new_event))
+
+                        assert link.insert_into_buffer(curr_packet.get_capacity())
 
                         # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
                         # new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)

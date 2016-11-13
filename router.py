@@ -13,7 +13,7 @@ class Router:
     def set_routing_table(self, table):
         self.table = table
 
-    def get_routing_table(self, table):
+    def get_routing_table(self):
         return self.table
         
     def add_link(self, link):

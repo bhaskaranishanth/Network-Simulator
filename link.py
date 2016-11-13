@@ -54,31 +54,21 @@ class Link:
             return False
         else:
             self.capacity += packet_size
+            self.num_packets += 1
             return True
+
+    def remove_from_buffer(self, packet_size):
+        if self.capacity - packet_size < 0:
+            assert False
+        self.capacity -= packet_size
+        self.num_packets -= 1
+        assert self.num_packets >= 0
 
     def get_num_packets(self):
         '''
         Number of packets in window.
         '''
         return self.num_packets
-
-    def inc_packet(self):
-        self.num_packets += 1
-
-    def dec_packet(self):
-        self.num_packets -= 1
-
-    def get_actual_packets(self):
-        '''
-        Actual number of packets in buffer.
-        '''
-        return self.actual_packets
-
-    def inc_actual_packet(self):
-        self.actual_packets += 1
-
-    def dec_actual_packet(self):
-        self.actual_packets -= 1
 
 
     def get_free_time(self):

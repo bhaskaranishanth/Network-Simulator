@@ -8,6 +8,7 @@ class Host:
         self.ip = ip
         self.link = None
         self.q = Queue()
+        self.window_count = 0
 
     def attach_link(self, link):
         '''
@@ -29,6 +30,12 @@ class Host:
 
     def get_ip(self):
         return self.ip
+
+    def get_window_count(self):
+        return self.window_count
+
+    def set_window_count(self, window_count):
+        self.window_count = window_count
 
     def insert_packet(self, packet):
         self.q.put(packet)
