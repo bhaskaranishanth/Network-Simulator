@@ -85,4 +85,5 @@ class Event:
         print "Initial Time: ", self.initial_time
         print 'Event id: ', id(self)
         print 'Packet id: ', self.event_data.packet_id
+        print 'Packet Type: ', self.event_data.get_type()
         return ""

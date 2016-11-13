@@ -39,7 +39,7 @@ class Link:
         return (self.src, self.dst)
 
     def get_link_endpoint(self, start):
-        return self.src.get_ip() if self.src == start else self.dst.get_ip()
+        return self.dst.get_ip() if self.src == start else self.src.get_ip()
 
     def get_weight(self):
         '''
