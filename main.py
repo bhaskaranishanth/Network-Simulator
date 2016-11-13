@@ -71,8 +71,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 1:
-                break
+            # if count == 100:
+            #     break
 
 
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     timeout_val = 5
 
-    window_size = 2
+    window_size = 10
     initialize_packets(flows, hosts)
     for host_id in hosts:
         link = hosts[host_id].get_link()
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     acknowledged_packets = {}
     pck_graph = []
 #     buf_to_link_time = .05
-#     dropped_packets = []
+    dropped_packets = []
 #     timeout_val = 1
 
     # Continuously pull events from the priority queue
@@ -242,10 +242,11 @@ if __name__ == '__main__':
                         # Perform this ack only based on certain acks
                         curr_host.set_window_count(curr_host.get_window_count()-1)
 
+
                     # Convert packet from host queue into event and insert into buffer
                     if curr_host.get_window_count() < window_size:
 
-                        assert curr_link.get_num_packets() - window_size < 0
+                        # assert curr_link.get_num_packets() - window_size < 0
                         while curr_link.get_num_packets() < window_size:
                             pkt = curr_host.remove_packet()
                             if pkt != None:
@@ -272,7 +273,7 @@ if __name__ == '__main__':
                     # p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_link.get_link_endpoint(curr_host))
                     # p.packet_id = curr_packet.packet_id
 
-                    assert curr_link.get_free_time() <= t
+                    # assert curr_link.get_free_time() <= t
 
                     if curr_link.get_free_time() <= t:
                         print 'Running...'
@@ -325,10 +326,29 @@ if __name__ == '__main__':
                 else:
                     acknowledged_packets[p_id] -= 1
             else:
+                print 'Creating timeout packet'
                 # Create new packet and insert into host's queue
                 p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_packet.get_src())
                 p.packet_id = curr_packet.packet_id
-                curr_host.insert_packet(p)
+                # curr_host.insert_packet(p)
+                dropped_packets.append(p)
+
+
+                new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
+                eq.put((new_event.get_initial_time(), new_event))
+                curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
+                curr_link.insert_into_buffer(p.get_capacity())
+
+                dst_time = global_time + timeout_val
+                timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), None, p)
+                eq.put((timeout_event.get_initial_time(), timeout_event))
+
+
+                # new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
+                # eq.put((new_event.get_initial_time(), new_event))
+
+                # timeout_event = Event(TIMEOUT_EVENT, global_time + timeout_val, p.get_src(), p.get_dest(), None, p)
+                # eq.put((timeout_event.get_initial_time(), timeout_event))
 
             print 'Timeout happened!!!!!'
             print 'Other'
@@ -336,6 +356,7 @@ if __name__ == '__main__':
             assert False
 
     print 'Completed everything '
+    print len(dropped_packets)
     # print(pck_graph)
     # graph(pck_graph)
 
