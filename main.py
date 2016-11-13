@@ -9,6 +9,8 @@ from djikstra import *
 from event import *
 from eventqueue import *
 from event import *
+from graph import *
+import matplotlib.pyplot as plt 
 
 def process_input():
     host_f = open(HOST_FILE, 'r')
@@ -69,8 +71,10 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            # if count == 2:
-            #     break
+
+            if count == 100:
+                break
+
 
 
 
@@ -120,8 +124,10 @@ if __name__ == '__main__':
 ###### Flow has its own start time
 ###### Do acknowledgement packets need to be in the buffer
 
+
     global_time = 0
     acknowledged_packets = {}
+    pck_graph = []
 #     buf_to_link_time = .05
 #     dropped_packets = []
 #     timeout_val = 1
@@ -131,6 +137,7 @@ if __name__ == '__main__':
     while eq.qsize() != 0:
         print 'Queue size: ', eq.qsize()
         t, event_top = eq.get()
+        pck_graph.append(pck_tot_buffers(t, links))
         assert t != None
         global_time = t
         print t, event_top
@@ -289,5 +296,6 @@ if __name__ == '__main__':
         # break
 
     print 'Completed everything '
-
+    print(pck_graph)
+    graph(pck_graph)
 
