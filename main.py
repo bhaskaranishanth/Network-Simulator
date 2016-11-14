@@ -172,7 +172,7 @@ if __name__ == '__main__':
                 curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_src))
                 event_dst_loc = curr_packet.get_curr_loc()
                 # print 'Event ', event_src_loc, event_dst_loc
-                new_event = Event(PACKET_RECIEVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
+                new_event = Event(PACKET_RECEIVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
                 eq.put((new_event.get_initial_time(), new_event))
 
                 # Remove packets from buffer and decrement count
@@ -184,7 +184,7 @@ if __name__ == '__main__':
                 eq.put((event_top.initial_time, event_top))
 
         # Host or Router receives a packet
-        elif event_top.get_type() == PACKET_RECIEVED:
+        elif event_top.get_type() == PACKET_RECEIVED:
             # Router component
             if event_top.get_data().get_curr_loc() in routers:
                 print 'Packet received in router....'     
@@ -287,7 +287,7 @@ if __name__ == '__main__':
                         assert curr_link.insert_into_buffer(p.get_capacity())
 
                         # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
-                        # new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                        # new_event = Event(PACKET_RECEIVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
                         # eq.put((new_event.get_initial_time(), new_event))
                     else:
                         print 'Waiting....'

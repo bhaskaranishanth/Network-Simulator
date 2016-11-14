@@ -37,7 +37,7 @@ It is possible for the ack packets to come out of order, right?
             #     #     dst_time = global_time + link_transfer_time
             #     #     curr_link.update_next_free_time(dst_time)
             #     #     curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
-            #     #     new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+            #     #     new_event = Event(PACKET_RECEIVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
             #     #     eq.put((new_event.get_initial_time(), new_event))
 
             #     #     # Decrease actual packets
@@ -83,7 +83,7 @@ It is possible for the ack packets to come out of order, right?
             #         curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
             #         event_dst_loc = curr_packet.get_curr_loc()
             #         # print 'Curr location: ', curr_packet.get_curr_loc()
-            #         new_event = Event(PACKET_RECIEVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
+            #         new_event = Event(PACKET_RECEIVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
             #         eq.put((new_event.get_initial_time(), new_event))
 
             #         # Decrease actual packets
