@@ -40,7 +40,7 @@ def graph(points):
 
     plt.ylabel("Packets In Buffer")
     plt.xlabel("Time")
-    plt.legend(handles = lines)
+    plt.legend(lines)
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
