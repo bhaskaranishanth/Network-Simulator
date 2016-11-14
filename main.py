@@ -70,8 +70,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            # if count == 1000:
-            #     break
+            if count == 10:
+                break
 
 
 
@@ -337,7 +337,5 @@ if __name__ == '__main__':
             assert False
 
     print 'Completed everything '
-    print len(dropped_packets)
-    print(pck_graph)
     graph(pck_graph)
 
