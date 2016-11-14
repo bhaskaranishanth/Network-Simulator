@@ -5,9 +5,8 @@ class Link:
     """
     Represents Link.
     """
-    def __init__(self, link_id, length, buf, prop_time, trans_time, congestion, direction):
+    def __init__(self, link_id, buf, prop_time, trans_time, congestion, direction):
         self.link_id = link_id
-        self.length = length
         self.buf = float(buf) * 10 ** 3
         self.prop_time = float(prop_time)
         self.trans_time = float(trans_time)
@@ -45,9 +44,7 @@ class Link:
         '''
         Return weight of link.
         '''
-        if self.length == None:
-            self.length = 1
-        return self.length
+        return 1
 
     def insert_into_buffer(self, packet_size):
         # print 'insert_into_buffer....'
@@ -92,7 +89,6 @@ class Link:
 
     def __str__(self):
         print 'Link id: ' + str(self.link_id)
-        print 'Length: ' + str(self.length)
         print 'Buffer: ' + str(self.buf)
         print 'Propagation Time: ' + str(self.prop_time)
         print 'Transmission Time: ' + str(self.trans_time)

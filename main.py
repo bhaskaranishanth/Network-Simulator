@@ -33,14 +33,13 @@ def process_input():
         link_id, src, dst, trans_time, prop_time, buf = attrs
         congestion = None
         direction = None
-        length = None
         assert src in hosts or src in routers, 'Endpoint is invalid'
         assert dst in hosts or dst in routers, 'Endpoint is invalid'
 
         # Create two way links
         src_node = hosts[src] if src in hosts else routers[src]
         dst_node = hosts[dst] if dst in hosts else routers[dst]
-        l = Link(link_id, length, buf, prop_time, trans_time, congestion, direction)
+        l = Link(link_id, buf, prop_time, trans_time, congestion, direction)
         l.connect(src_node, dst_node)
         links[link_id] = l
 
@@ -124,7 +123,6 @@ if __name__ == '__main__':
 ####### Timeout event happens first, then ack packet is received.
 ###### Flow has its own start time
 ###### Do acknowledgement packets need to be in the buffer
-###### Rename get_curr_loc() to be the get_dest_loc() since it is the endpoint, wait i'm confused on this part too
 ###### Create event processing class to handle all different types of events
 ###### Event should only have the current src and dst, packet has total distance, LINK_TO_ENDPOINT is the only exception
 ###### Implement window counter for each host
