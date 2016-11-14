@@ -50,12 +50,13 @@ class Link:
         return self.length
 
     def insert_into_buffer(self, packet_size):
-        print 'capacity: ', self.capacity
-        print 'packet size: ', packet_size
-        print 'Buffer: ', self.buf
-        print type(self.capacity), type(packet_size), type(self.buf)
-        print self.capacity + packet_size > self.buf
-        print self.link_id
+        # print 'insert_into_buffer....'
+        # print 'capacity: ', self.capacity
+        # print 'packet size: ', packet_size
+        # print 'Buffer: ', self.buf
+        # print type(self.capacity), type(packet_size), type(self.buf)
+        # print self.capacity + packet_size > self.buf
+        # print self.link_id
         if self.capacity + packet_size > self.buf:
             return False
         else:
@@ -64,11 +65,11 @@ class Link:
             return True
 
     def remove_from_buffer(self, packet_size):
-        print 'remove_from_buffer....'
-        print 'capacity: ', self.capacity
-        print 'packet size: ', packet_size
-        print 'Buffer: ', self.buf
-        print self.link_id
+        # print 'remove_from_buffer....'
+        # print 'capacity: ', self.capacity
+        # print 'packet size: ', packet_size
+        # print 'Buffer: ', self.buf
+        # print self.link_id
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
@@ -90,6 +91,7 @@ class Link:
 
 
     def __str__(self):
+        print 'Link id: ' + str(self.link_id)
         print 'Length: ' + str(self.length)
         print 'Buffer: ' + str(self.buf)
         print 'Propagation Time: ' + str(self.prop_time)

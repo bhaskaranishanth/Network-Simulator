@@ -71,8 +71,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 1:
-                break
+            # if count == 100:
+            #     break
 
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     MAX_BUFFER_SIZE = 64
 
-    timeout_val = 5
+    timeout_val = 100
 
     window_size = 10
     initialize_packets(flows, hosts)
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         pck_graph.append(pck_tot_buffers(t, links))
         assert t != None
         global_time = t
-        print t, event_top
+        # print t, event_top
 
         # Send from Link Buffer -> Endpoint
         if event_top.get_type() == LINK_TO_ENDPOINT:
@@ -201,8 +201,8 @@ if __name__ == '__main__':
                 
                 # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_router))
 
-                print 'Packet info: '
-                print curr_packet
+                # print 'Packet info: '
+                # print curr_packet
 
                 # Insert packet into buffer
                 if curr_link.insert_into_buffer(curr_packet.get_capacity()):
@@ -231,12 +231,12 @@ if __name__ == '__main__':
 
                     # Convert packet from host queue into event and insert into buffer
                     if curr_host.get_window_count() < window_size:
-                        assert False
+                        # assert False
                         # assert curr_link.get_num_packets() - window_size < 0
                         while curr_link.get_num_packets() < window_size:
                             pkt = curr_host.remove_packet()
                             if pkt != None:
-                                if link.insert_into_buffer(curr_packet.get_capacity()):
+                                if curr_link.insert_into_buffer(pkt.get_capacity()):
                                     new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
                                     eq.put((new_event.get_initial_time(), new_event))
 
@@ -273,14 +273,20 @@ if __name__ == '__main__':
                         # print p.get_src()
                         # print p
 
+                        # print 'Curr link ....'
+                        # print curr_link
+
                         # Determine the event start and end location
                         event_src_loc = p.get_src()
                         event_dst_loc = curr_link.get_link_endpoint(curr_host)
 
+                        # print event_src_loc
+                        # print event_dst_loc
+
                         new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, None, p)
                         eq.put((new_event.get_initial_time(), new_event))
 
-                        assert link.insert_into_buffer(p.get_capacity())
+                        assert curr_link.insert_into_buffer(p.get_capacity())
 
                         # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
                         # new_event = Event(PACKET_RECIEVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
@@ -313,8 +319,8 @@ if __name__ == '__main__':
 
                 new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
                 eq.put((new_event.get_initial_time(), new_event))
-                curr_link = hosts[event_top.get_data().get_curr_loc()].get_link()
-                curr_link.insert_into_buffer(p.get_capacity())
+                curr_link = hosts[curr_packet.get_src()].get_link()
+                assert curr_link.insert_into_buffer(p.get_capacity())
 
                 dst_time = global_time + timeout_val
                 timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), None, p)
