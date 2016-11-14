@@ -71,7 +71,7 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            # if count == 100:
+            # if count == 1000:
             #     break
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     MAX_BUFFER_SIZE = 64
 
-    timeout_val = 100
+    timeout_val = 10
 
     window_size = 10
     initialize_packets(flows, hosts)
@@ -340,6 +340,6 @@ if __name__ == '__main__':
 
     print 'Completed everything '
     print len(dropped_packets)
-    # print(pck_graph)
-    # graph(pck_graph)
+    print(pck_graph)
+    graph(pck_graph)
 
