@@ -8,8 +8,8 @@ class Link:
     def __init__(self, link_id, buf, prop_time, trans_time, congestion, direction):
         self.link_id = link_id
         self.buf = float(buf) * 10 ** 3
-        self.prop_time = float(prop_time)
-        self.trans_time = float(trans_time)
+        self.prop_time = float(prop_time) * (10 ** 6) / 8
+        self.trans_time = float(trans_time) * 10 ** (-3)
         self.congestion = congestion
         self.direction = direction
 
@@ -46,14 +46,20 @@ class Link:
         '''
         return 1
 
+    def get_trans_time(self):
+        return self.trans_time
+
+    def get_prop_time(self):
+        return self.prop_time
+
     def insert_into_buffer(self, packet_size):
-        # print 'insert_into_buffer....'
-        # print 'capacity: ', self.capacity
-        # print 'packet size: ', packet_size
-        # print 'Buffer: ', self.buf
-        # print type(self.capacity), type(packet_size), type(self.buf)
-        # print self.capacity + packet_size > self.buf
-        # print self.link_id
+        print 'insert_into_buffer....'
+        print 'capacity: ', self.capacity
+        print 'packet size: ', packet_size
+        print 'Buffer: ', self.buf
+        print type(self.capacity), type(packet_size), type(self.buf)
+        print self.capacity + packet_size > self.buf
+        print self.link_id
         if self.capacity + packet_size > self.buf:
             return False
         else:
@@ -62,11 +68,11 @@ class Link:
             return True
 
     def remove_from_buffer(self, packet_size):
-        # print 'remove_from_buffer....'
-        # print 'capacity: ', self.capacity
-        # print 'packet size: ', packet_size
-        # print 'Buffer: ', self.buf
-        # print self.link_id
+        print 'remove_from_buffer....'
+        print 'capacity: ', self.capacity
+        print 'packet size: ', packet_size
+        print 'Buffer: ', self.buf
+        print self.link_id
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size

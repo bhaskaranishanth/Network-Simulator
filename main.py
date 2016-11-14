@@ -66,7 +66,7 @@ def initialize_packets(flows, hosts):
     for key in flows:
         event_list = []
         count = 0
-        for packet in flows[key].gen_packets()[0]:
+        for packet in flows[key].gen_packets():
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
@@ -89,8 +89,6 @@ if __name__ == '__main__':
     d.update_routing_table(routers.values())
     print_dict(routers, 'ROUTERS')
 
-    MAX_BUFFER_SIZE = 64
-
     timeout_val = 10
 
     window_size = 10
@@ -104,7 +102,7 @@ if __name__ == '__main__':
                 if curr_packet != None:
                     assert link.insert_into_buffer(curr_packet.get_capacity())
                     hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-                    new_event = Event(LINK_TO_ENDPOINT, 0, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                    new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
 
                     timeout_event = Event(TIMEOUT_EVENT, timeout_val, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
@@ -135,14 +133,13 @@ if __name__ == '__main__':
 #     timeout_val = 1
 
     # Continuously pull events from the priority queue
-    link_transfer_time = 1
     while eq.qsize() != 0:
         print 'Queue size: ', eq.qsize()
         t, event_top = eq.get()
         pck_graph.append(pck_tot_buffers(t, links))
         assert t != None
         global_time = t
-        # print t, event_top
+        print t, event_top
 
         # Send from Link Buffer -> Endpoint
         if event_top.get_type() == LINK_TO_ENDPOINT:
@@ -164,7 +161,8 @@ if __name__ == '__main__':
             if curr_link.get_free_time() <= t:
                 # If link free, use link and send a received packet that
                 # gets completed once it passes through the link
-                dst_time = global_time + link_transfer_time
+                dst_time = global_time + curr_packet.get_capacity() / curr_link.get_prop_time() + curr_link.get_trans_time()
+                print "dest time:", dst_time
                 curr_link.update_next_free_time(dst_time)
 
                 # Compute src and dest locations for event
@@ -262,7 +260,7 @@ if __name__ == '__main__':
                         dst_time = global_time
 
                         # Make sure the ack packet has the same id as the original packet
-                        p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_packet.get_dest())
+                        p = Packet(ACK_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), curr_packet.get_dest(), global_time)
                         p.packet_id = curr_packet.packet_id
                         # p.set_curr_loc(p.get_src())
 
@@ -281,10 +279,13 @@ if __name__ == '__main__':
                         # print event_src_loc
                         # print event_dst_loc
 
-                        new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, None, p)
-                        eq.put((new_event.get_initial_time(), new_event))
+                        if curr_link.insert_into_buffer(p.get_capacity()):
+                            new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, None, p)
+                            eq.put((new_event.get_initial_time(), new_event))
 
-                        assert curr_link.insert_into_buffer(p.get_capacity())
+                        else:
+                            dropped_packets.append(curr_packet)
+
 
                         # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
                         # new_event = Event(PACKET_RECEIVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
@@ -309,16 +310,20 @@ if __name__ == '__main__':
             else:
                 print 'Creating timeout packet'
                 # Create new packet and insert into host's queue
-                p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_packet.get_src())
+                p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_packet.get_src(), global_time)
                 p.packet_id = curr_packet.packet_id
                 # curr_host.insert_packet(p)
                 dropped_packets.append(p)
 
-
-                new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
-                eq.put((new_event.get_initial_time(), new_event))
                 curr_link = hosts[curr_packet.get_src()].get_link()
-                assert curr_link.insert_into_buffer(p.get_capacity())
+                
+                if curr_link.insert_into_buffer(p.get_capacity()):
+                    new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
+                    eq.put((new_event.get_initial_time(), new_event))
+
+                else:
+                    dropped_packets.append(curr_packet)
+
 
                 dst_time = global_time + timeout_val
                 timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), None, p)
@@ -337,5 +342,7 @@ if __name__ == '__main__':
             assert False
 
     print 'Completed everything '
+    print len(dropped_packets)
+    # print(pck_graph)
     graph(pck_graph)
 

@@ -56,10 +56,10 @@ class Flow:
         packets = []
         n = int(ceil(self.data_size * 10**6 / MESSAGE_SIZE))
         for i in range(n):
-            p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest(), self.get_src())
+            p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest(), self.get_src(), self.get_start())
             packets.append(p)
 
-        return packets, self.get_start()
+        return packets
 
     """ Print methods """
     def __str__(self):

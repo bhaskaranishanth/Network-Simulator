@@ -21,7 +21,7 @@ class Packet:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-    def __init__(self, packet_type, payload, src, dest, curr_loc):
+    def __init__(self, packet_type, payload, src, dest, curr_loc, init_time):
         self.check_type(packet_type)
         self.type = packet_type
         self.set_capacity()
@@ -33,6 +33,7 @@ class Packet:
         assert type(curr_loc) == str
         self.curr_loc = curr_loc
         self.packet_id = id(self)
+        self.init_time = init_time
 
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
@@ -69,6 +70,9 @@ class Packet:
     def get_curr_loc(self):
         return self.curr_loc
 
+    def get_init_time(self):
+        return self.init_time
+
 
     """ ACCESSOR METHODS """
 
@@ -89,6 +93,9 @@ class Packet:
     def set_curr_loc(self, curr_loc):
         assert type(curr_loc) == str
         self.curr_loc = curr_loc
+
+    def set_init_time(self, init_time):
+        self.init_time = init_time
 
     """ PRINT METHODS """
     def __str__(self):
