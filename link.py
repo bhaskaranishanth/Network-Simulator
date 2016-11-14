@@ -8,9 +8,9 @@ class Link:
     def __init__(self, link_id, length, buf, prop_time, trans_time, congestion, direction):
         self.link_id = link_id
         self.length = length
-        self.buf = buf
-        self.prop_time = prop_time
-        self.trans_time = trans_time
+        self.buf = float(buf) * 10 ** 3
+        self.prop_time = float(prop_time)
+        self.trans_time = float(trans_time)
         self.congestion = congestion
         self.direction = direction
 
@@ -50,6 +50,12 @@ class Link:
         return self.length
 
     def insert_into_buffer(self, packet_size):
+        print 'capacity: ', self.capacity
+        print 'packet size: ', packet_size
+        print 'Buffer: ', self.buf
+        print type(self.capacity), type(packet_size), type(self.buf)
+        print self.capacity + packet_size > self.buf
+        print self.link_id
         if self.capacity + packet_size > self.buf:
             return False
         else:
@@ -58,6 +64,11 @@ class Link:
             return True
 
     def remove_from_buffer(self, packet_size):
+        print 'remove_from_buffer....'
+        print 'capacity: ', self.capacity
+        print 'packet size: ', packet_size
+        print 'Buffer: ', self.buf
+        print self.link_id
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
