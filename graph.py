@@ -7,6 +7,27 @@ def pck_tot_buffers(time, links):
         all_points.append([link_id, time, link.get_num_packets()])
     return all_points
 
+def drop_packets(time, links):
+    drop_packets_list = []
+    for link_id in links.keys():
+        link = links[link_id]
+        drop_packets_list.append([link_id, time, link.get_drop_packets()])
+    return drop_packets_list
+
+def format_drop_to_rate(drop_packets):
+    max_time = int(drop_packets[len(drop_packets) - 1][0][1]) + 1
+    drop_rate_arr = [[0 for y in range(max_time)] for z in range(len(drop_packets[0]))]
+
+    # for t in range(len(drop_packets)):
+    #     for l in range(len(drop_packets)):
+    #         time_dropped = drop_packets[t][l][
+    #         drop_rate_arr[time_dropped][l] += 1
+    for t in range(len(drop_packets)):
+        for l in range(len(drop_packets[0])):
+            if drop_packets[t][l][2] != 0:
+                return 1
+
+    return 0
 def graph(points):
     # x_coord = []
     # y_coord = []

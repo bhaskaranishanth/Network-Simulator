@@ -70,7 +70,7 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 1:
+            if count == 25:
                 break
 
 
@@ -90,9 +90,9 @@ if __name__ == '__main__':
     d.update_routing_table(routers.values())
     print_dict(routers, 'ROUTERS')
 
-    timeout_val = .1
+    timeout_val = 0.1
 
-    window_size = 10
+    window_size = 100
     initialize_packets(flows, hosts)
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
@@ -131,12 +131,15 @@ if __name__ == '__main__':
     acknowledged_packets = {}
     pck_graph = []
     dropped_packets = []
+    pck_drop_graph = []
+#     timeout_val = 1
 
     # Continuously pull events from the priority queue
     while eq.qsize() != 0:
         print 'Queue size: ', eq.qsize()
         t, event_top = eq.get()
         pck_graph.append(pck_tot_buffers(t, links))
+        pck_drop_graph.append(drop_packets(t, links))
         assert t != None
         global_time = t
         print t, event_top
@@ -197,6 +200,9 @@ if __name__ == '__main__':
                     eq.put((new_event.get_initial_time(), new_event))
                 else:
                     dropped_packets.append(curr_packet)
+                    curr_link.increment_drop_packets()
+                    #assert False
+
 
             # Host receives a packet
             elif event_top.get_data().get_curr_loc() in hosts:
@@ -270,6 +276,13 @@ if __name__ == '__main__':
 
                         else:
                             dropped_packets.append(curr_packet)
+                            curr_link.increment_drop_packets()
+                            #assert False
+
+
+                        # curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_host))
+                        # new_event = Event(PACKET_RECEIVED, dst_time, event_top.get_src(), event_top.get_dest(), event_top.get_flow(), curr_packet)
+                        # eq.put((new_event.get_initial_time(), new_event))
                     else:
                         print 'Waiting....'
                         # Else, update event completion time
@@ -294,6 +307,8 @@ if __name__ == '__main__':
                 p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_packet.get_src(), global_time)
                 p.packet_id = curr_packet.packet_id
                 dropped_packets.append(p)
+                # curr_host.insert_packet(p)
+    
 
                 curr_link = hosts[curr_packet.get_src()].get_link()
                 # Attempt to insert new packet back to buffer
@@ -301,9 +316,12 @@ if __name__ == '__main__':
                     new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), p)
                     eq.put((new_event.get_initial_time(), new_event))
                 else:
-                    dropped_packets.append(curr_packet)
 
                 # Create a timeout event for the new packet
+                    dropped_packets.append(p)
+                    curr_link.increment_drop_packets()
+                    #assert False
+
                 dst_time = global_time + timeout_val
                 timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), p)
                 eq.put((timeout_event.get_initial_time(), timeout_event))
@@ -314,7 +332,9 @@ if __name__ == '__main__':
             assert False
 
     print 'Completed everything '
-    print len(dropped_packets)
-    # print(pck_graph)
-    graph(pck_graph)
+    # print len(dropped_packets)
+    # # print(pck_graph)
+    # graph(pck_graph)
+    print(pck_drop_graph)
+    print(format_drop_to_rate(pck_drop_graph))
 
