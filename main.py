@@ -70,7 +70,7 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 25:
+            if count == 1000:
                 break
 
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     timeout_val = 0.1
 
-    window_size = 100
+    window_size = 10
     initialize_packets(flows, hosts)
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
@@ -102,13 +102,16 @@ if __name__ == '__main__':
             while link.get_num_packets() < window_size:
                 curr_packet = hosts[host_id].remove_packet()
                 if curr_packet != None:
-                    assert link.insert_into_buffer(curr_packet.get_capacity())
-                    hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-                    new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
-                    eq.put((new_event.get_initial_time(), new_event))
+                    if link.insert_into_buffer(curr_packet.get_capacity()):
+                        hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
+                        new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
+                        eq.put((new_event.get_initial_time(), new_event))
 
-                    timeout_event = Event(TIMEOUT_EVENT, timeout_val + curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
-                    eq.put((timeout_event.get_initial_time(), timeout_event))
+                        timeout_event = Event(TIMEOUT_EVENT, timeout_val + curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
+                        eq.put((timeout_event.get_initial_time(), timeout_event))
+                    else:
+                        hosts[host_id].insert_packet(curr_packet)
+                        break
                 else:
                     break
 
