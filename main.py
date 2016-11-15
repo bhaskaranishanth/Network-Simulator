@@ -335,6 +335,7 @@ if __name__ == '__main__':
     # print len(dropped_packets)
     # # print(pck_graph)
     # graph(pck_graph)
-    print(pck_drop_graph)
-    print(format_drop_to_rate(pck_drop_graph))
+    # points = format_drop_to_rate(pck_drop_graph)
+    # graph(points)
+    graph_pck_drop_rate(pck_drop_graph)
 

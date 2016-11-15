@@ -14,21 +14,32 @@ def drop_packets(time, links):
         drop_packets_list.append([link_id, time, link.get_drop_packets()])
     return drop_packets_list
 
-def format_drop_to_rate(drop_packets):
+def graph_pck_drop_rate(drop_packets):
     max_time = int(drop_packets[len(drop_packets) - 1][0][1]) + 1
     drop_rate_arr = [[0 for y in range(max_time)] for z in range(len(drop_packets[0]))]
-
-    # for t in range(len(drop_packets)):
-    #     for l in range(len(drop_packets)):
-    #         time_dropped = drop_packets[t][l][
-    #         drop_rate_arr[time_dropped][l] += 1
+    old_time = 0
     for t in range(len(drop_packets)):
         for l in range(len(drop_packets[0])):
-            if drop_packets[t][l][2] != 0:
-                return 1
+            time_dropped = int(drop_packets[t][l][1])
+            pck_dropped = drop_packets[t][l][2]
+            drop_rate_arr[l][time_dropped]= pck_dropped
+    for l in range(len(drop_rate_arr)):
+        for t in range(max_time - 1, 0, -1):
+            drop_rate_arr[l][t] = drop_rate_arr[l][t] - drop_rate_arr[l][t - 1]
+    lines = []
+    for l in range(len(drop_rate_arr)):
+        lab = drop_packets[0][l][0]
+        x = range(max_time)
+        y = drop_rate_arr[l]
+        line_up, = plt.plot(x, y, linewidth = 2.0, label = lab)
+        lines.append(line_up)
+    plt.ylabel("Rate Of Packets Dropped")
+    plt.xlabel("Time")
+    plt.legend(handles = lines)
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
 
-    return 0
-def graph(points):
+def graph_pck_buf(points):
     # x_coord = []
     # y_coord = []
     # max_y = -1000000000000
