@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     timeout_val = 0.1
 
-    window_size = 10
+    window_size = 100
     initialize_packets(flows, hosts)
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
@@ -310,6 +310,7 @@ if __name__ == '__main__':
                 p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), curr_packet.get_src(), global_time)
                 p.packet_id = curr_packet.packet_id
                 dropped_packets.append(p)
+                curr_link.increment_drop_packets()
                 # curr_host.insert_packet(p)
     
 
@@ -340,5 +341,6 @@ if __name__ == '__main__':
     graph_pck_buf(pck_graph)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
-    graph_pck_drop_rate(pck_drop_graph)
+    # graph_pck_drop_rate(pck_drop_graph)
+    graph_pck_buf(pck_graph)
 
