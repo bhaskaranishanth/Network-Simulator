@@ -15,7 +15,6 @@ class Link:
 
         self.capacity = 0
         self.num_packets = 0
-        self.actual_packets = 0
         self.next_free_time = -1
 
         # Source and destinations are either Routers or Hosts

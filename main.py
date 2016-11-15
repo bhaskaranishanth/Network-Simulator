@@ -89,7 +89,7 @@ if __name__ == '__main__':
     d.update_routing_table(routers.values())
     print_dict(routers, 'ROUTERS')
 
-    timeout_val = 10
+    timeout_val = .01
 
     window_size = 10
     initialize_packets(flows, hosts)
