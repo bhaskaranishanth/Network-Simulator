@@ -70,7 +70,7 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 100:
+            if count == 1:
                 break
 
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
                     new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
 
-                    timeout_event = Event(TIMEOUT_EVENT, timeout_val, curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
+                    timeout_event = Event(TIMEOUT_EVENT, timeout_val + curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
                     eq.put((timeout_event.get_initial_time(), timeout_event))
                 else:
                     break
