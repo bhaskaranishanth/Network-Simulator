@@ -102,10 +102,10 @@ if __name__ == '__main__':
                 if curr_packet != None:
                     assert link.insert_into_buffer(curr_packet.get_capacity())
                     hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-                    new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                    new_event = Event(LINK_TO_ENDPOINT, curr_packet.get_init_time(), curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
 
-                    timeout_event = Event(TIMEOUT_EVENT, timeout_val, curr_packet.get_src(), curr_packet.get_dest(), None, curr_packet)
+                    timeout_event = Event(TIMEOUT_EVENT, timeout_val, curr_packet.get_src(), curr_packet.get_dest(), curr_packet)
                     eq.put((timeout_event.get_initial_time(), timeout_event))
                 else:
                     break
@@ -170,7 +170,7 @@ if __name__ == '__main__':
                 curr_packet.set_curr_loc(curr_link.get_link_endpoint(curr_src))
                 event_dst_loc = curr_packet.get_curr_loc()
                 # print 'Event ', event_src_loc, event_dst_loc
-                new_event = Event(PACKET_RECEIVED, dst_time, event_src_loc, event_dst_loc, None, curr_packet)
+                new_event = Event(PACKET_RECEIVED, dst_time, event_src_loc, event_dst_loc, curr_packet)
                 eq.put((new_event.get_initial_time(), new_event))
 
                 # Remove packets from buffer and decrement count
@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
                 # Insert packet into buffer
                 if curr_link.insert_into_buffer(curr_packet.get_capacity()):
-                    new_event = Event(LINK_TO_ENDPOINT, global_time, curr_packet.get_curr_loc(), next_hop.get_ip(), None, curr_packet)
+                    new_event = Event(LINK_TO_ENDPOINT, global_time, curr_packet.get_curr_loc(), next_hop.get_ip(), curr_packet)
                     eq.put((new_event.get_initial_time(), new_event))
                 else:
                     dropped_packets.append(curr_packet)
@@ -233,11 +233,11 @@ if __name__ == '__main__':
                             pkt = curr_host.remove_packet()
                             if pkt != None:
                                 if curr_link.insert_into_buffer(pkt.get_capacity()):
-                                    new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                    new_event = Event(LINK_TO_ENDPOINT, global_time, pkt.get_src(), pkt.get_dest(), pkt)
                                     eq.put((new_event.get_initial_time(), new_event))
 
                                     dst_time = global_time + timeout_val
-                                    timeout_event = Event(TIMEOUT_EVENT, dst_time, pkt.get_src(), pkt.get_dest(), None, pkt)
+                                    timeout_event = Event(TIMEOUT_EVENT, dst_time, pkt.get_src(), pkt.get_dest(), pkt)
                                     eq.put((timeout_event.get_initial_time(), timeout_event))
 
                                     # Increment window count
@@ -280,7 +280,7 @@ if __name__ == '__main__':
                         # print event_dst_loc
 
                         if curr_link.insert_into_buffer(p.get_capacity()):
-                            new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, None, p)
+                            new_event = Event(LINK_TO_ENDPOINT, dst_time, event_src_loc, event_dst_loc, p)
                             eq.put((new_event.get_initial_time(), new_event))
 
                         else:
@@ -318,7 +318,7 @@ if __name__ == '__main__':
                 curr_link = hosts[curr_packet.get_src()].get_link()
                 
                 if curr_link.insert_into_buffer(p.get_capacity()):
-                    new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), None, p)
+                    new_event = Event(LINK_TO_ENDPOINT, global_time, p.get_src(), p.get_dest(), p)
                     eq.put((new_event.get_initial_time(), new_event))
 
                 else:
@@ -326,7 +326,7 @@ if __name__ == '__main__':
 
 
                 dst_time = global_time + timeout_val
-                timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), None, p)
+                timeout_event = Event(TIMEOUT_EVENT, dst_time, p.get_src(), p.get_dest(), p)
                 eq.put((timeout_event.get_initial_time(), timeout_event))
 
 

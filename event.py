@@ -15,12 +15,11 @@ class Event:
     1 - Acknowledgement Packet
     2 - Router Packet
     """
-    def __init__(self, event_type, initial_time, src, dest, flow, data):
+    def __init__(self, event_type, initial_time, src, dest, data):
         self.check_type(event_type)
         self.type = event_type
         self.src = src
         self.dest = dest 
-        self.flow = flow
         self.initial_time = initial_time
         self.event_data = data
 
@@ -42,9 +41,6 @@ class Event:
     def get_initial_time(self):
         return self.initial_time
 
-    def get_flow(self):
-        return self.flow
-
     def get_data(self):
         return self.event_data
 
@@ -60,9 +56,6 @@ class Event:
     def set_dest(self, dest):
         self.dest = dest
 
-    def set_flow(self, flow):
-        self.flow = flow
-
     def set_initial_time(self, initial_time):
         self.flow = initial_time
 
@@ -76,7 +69,6 @@ class Event:
         print "Type: ", self.type
         print "Source: ", self.src
         print "Destination: ", self.dest
-        print "Flow: ", self.flow
         print "Initial Time: ", self.initial_time
         print 'Event id: ', id(self)
         print 'Packet id: ', self.event_data.packet_id
