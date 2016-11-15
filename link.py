@@ -19,12 +19,25 @@ class Link:
         self.capacity = 0
         self.num_packets = 0
         self.next_free_time = -1
+        self.num_dropped_packets = 0
 
         # Source and destinations are either Routers or Hosts
         self.src = None
         self.dst = None
 
+
     """ ACCESSOR METHODS """
+
+
+    def connect(self, src, dst):
+        '''
+        Uses the link to connect the src and dst.
+        '''
+        assert isinstance(src, Router) or isinstance(src, Host)
+        assert isinstance(dst, Router) or isinstance(dst, Host)
+        self.src = src
+        self.dst = dst
+
 
     def get_endpoints(self):
         '''
@@ -83,6 +96,12 @@ class Link:
             self.num_packets += 1
             return True
 
+    def increment_drop_packets(self):
+        self.num_dropped_packets += 1
+
+    def get_drop_packets(self):
+        return self.num_dropped_packets
+        
     def remove_from_buffer(self, packet_size):
         print 'remove_from_buffer....'
         print 'capacity: ', self.capacity
