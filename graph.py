@@ -35,7 +35,7 @@ def graph_pck_drop_rate(drop_packets):
         lines.append(line_up)
     plt.ylabel("Rate Of Packets Dropped")
     plt.xlabel("Time")
-    plt.legend(handles = lines)
+    plt.legend(lines)
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 

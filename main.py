@@ -337,7 +337,7 @@ if __name__ == '__main__':
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)
-    # graph(pck_graph)
+    graph_pck_buf(pck_graph)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
     graph_pck_drop_rate(pck_drop_graph)
