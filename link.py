@@ -7,8 +7,11 @@ class Link:
     """
     def __init__(self, link_id, buf, prop_time, trans_time, congestion, direction):
         self.link_id = link_id
+        # Buffer size given in KB
         self.buf = float(buf) * 10 ** 3
+        # Prop time given in Mbps
         self.prop_time = float(prop_time) * (10 ** 6) / 8
+        # Trans time given in ms
         self.trans_time = float(trans_time) * 10 ** (-3)
         self.congestion = congestion
         self.direction = direction
@@ -21,14 +24,7 @@ class Link:
         self.src = None
         self.dst = None
 
-    def connect(self, src, dst):
-        '''
-        Uses the link to connect the src and dst.
-        '''
-        assert isinstance(src, Router) or isinstance(src, Host)
-        assert isinstance(dst, Router) or isinstance(dst, Host)
-        self.src = src
-        self.dst = dst
+    """ ACCESSOR METHODS """
 
     def get_endpoints(self):
         '''
@@ -50,6 +46,27 @@ class Link:
 
     def get_prop_time(self):
         return self.prop_time
+
+    def get_num_packets(self):
+        '''
+        Number of packets in window.
+        '''
+        return self.num_packets
+
+    def get_free_time(self):
+        return self.next_free_time
+
+    
+    """ MUTATOR METHODS """
+
+    def connect(self, src, dst):
+        '''
+        Uses the link to connect the src and dst.
+        '''
+        assert isinstance(src, Router) or isinstance(src, Host)
+        assert isinstance(dst, Router) or isinstance(dst, Host)
+        self.src = src
+        self.dst = dst
 
     def insert_into_buffer(self, packet_size):
         print 'insert_into_buffer....'
@@ -78,20 +95,12 @@ class Link:
         self.num_packets -= 1
         assert self.num_packets >= 0
 
-    def get_num_packets(self):
-        '''
-        Number of packets in window.
-        '''
-        return self.num_packets
-
-
-    def get_free_time(self):
-        return self.next_free_time
-
     def update_next_free_time(self, free_time):
         self.next_free_time = free_time
 
 
+    """ PRINT METHODS """
+    
     def __str__(self):
         print 'Link id: ' + str(self.link_id)
         print 'Buffer: ' + str(self.buf)

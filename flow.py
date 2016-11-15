@@ -14,7 +14,7 @@ class Flow:
         self.flow_start = float(flow_start)
 
     
-    """ Accessor methods """
+    """ ACCESSOR METHODS """
 
     def get_id(self):
         return self.flow_id
@@ -32,7 +32,7 @@ class Flow:
         return self.flow_start
 
     
-    """ Mutator methods """
+    """ MUTATOR METHODS """
 
     def set_id(self, flow_id):
         self.flow_id = flow_id
@@ -49,19 +49,21 @@ class Flow:
     def set_start(self, start):
         self.flow_start = start
 
-
-    """ Creating packets """
-
     def gen_packets(self):
+        """
+        Generates list of packets from flow
+        """
         packets = []
+        # Determine number of packets (total data size / size of message packet),
         n = int(ceil(self.data_size * 10**6 / MESSAGE_SIZE))
         for i in range(n):
+            # Create new packet and add to list of packets
             p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest(), self.get_src(), self.get_start())
             packets.append(p)
 
         return packets
 
-    """ Print methods """
+    """ PRINT METHODS """
     def __str__(self):
         print "Printing flow details..."
         print "Data size:", self.data_size

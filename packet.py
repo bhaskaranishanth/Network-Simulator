@@ -97,6 +97,7 @@ class Packet:
     def set_init_time(self, init_time):
         self.init_time = init_time
 
+
     """ PRINT METHODS """
     def __str__(self):
         print "Printing Packet Details"
