@@ -28,6 +28,8 @@ class Packet:
         self.check_payload(payload)
         
         self.payload = payload
+        assert type(src) == str
+        assert type(dest) == str
         self.src = src
         self.dest = dest
         assert type(curr_loc) == str
@@ -107,4 +109,5 @@ class Packet:
         print "Source: ", self.src
         print "Destination: ", self.dest
         print "Current Location: ", self.curr_loc
+        print "Packet ID: ", self.packet_id
         return ""

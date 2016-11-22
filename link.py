@@ -1,5 +1,6 @@
 from router import *
 from host import *
+from collections import deque
 
 class Link:
     """
@@ -15,6 +16,8 @@ class Link:
         self.trans_time = float(trans_time) * 10 ** (-3)
         self.congestion = congestion
         self.direction = direction
+
+        self.packet_queue = deque()
 
         self.capacity = 0
         self.num_packets = 0
@@ -46,6 +49,7 @@ class Link:
         return (self.src, self.dst)
 
     def get_link_endpoint(self, start):
+        assert isinstance(start, Router) or isinstance(start, Host)
         return self.dst.get_ip() if self.src == start else self.src.get_ip()
 
     def get_weight(self):
@@ -81,7 +85,7 @@ class Link:
         self.src = src
         self.dst = dst
 
-    def insert_into_buffer(self, packet_size):
+    def insert_into_buffer(self, packet, packet_size):
         print 'insert_into_buffer....'
         print 'capacity: ', self.capacity
         print 'packet size: ', packet_size
@@ -94,6 +98,7 @@ class Link:
         else:
             self.capacity += packet_size
             self.num_packets += 1
+            self.packet_queue.append(packet)
             return True
 
     def increment_drop_packets(self):
@@ -102,7 +107,7 @@ class Link:
     def get_drop_packets(self):
         return self.num_dropped_packets
         
-    def remove_from_buffer(self, packet_size):
+    def remove_from_buffer(self, packet, packet_size):
         print 'remove_from_buffer....'
         print 'capacity: ', self.capacity
         print 'packet size: ', packet_size
@@ -112,6 +117,7 @@ class Link:
             assert False
         self.capacity -= packet_size
         self.num_packets -= 1
+        self.packet_queue.popleft()
         assert self.num_packets >= 0
 
     def update_next_free_time(self, free_time):

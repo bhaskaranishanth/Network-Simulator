@@ -18,6 +18,8 @@ class Event:
     def __init__(self, event_type, initial_time, src, dest, data):
         self.check_type(event_type)
         self.type = event_type
+        assert type(src) == str
+        assert type(dest) == str
         self.src = src
         self.dest = dest 
         self.initial_time = initial_time
