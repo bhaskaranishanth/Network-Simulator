@@ -37,6 +37,11 @@ class Packet:
         self.packet_id = id(self)
         self.init_time = init_time
 
+        # print src
+        # print dest
+
+        # assert src[0] != 'H' or dest[0] != 'H'
+
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
             self.capacity = MESSAGE_SIZE
