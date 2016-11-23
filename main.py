@@ -70,8 +70,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            # if count == 1000:
-            #     break
+            if count == 1:
+                break
 
 
 if __name__ == '__main__':
@@ -131,6 +131,8 @@ if __name__ == '__main__':
             pass
             # TODO
 
+    create_dynamic_routing_event(ROUTING_INTERVAL)
+
 
 ######## Link might need both directions because one links buffer might be full 
 #### while on the other direction, it can be full too
@@ -147,6 +149,8 @@ if __name__ == '__main__':
     pck_graph = []
     dropped_packets = []
     pck_drop_graph = []
+
+    counter = 0
 
     # Continuously pull events from the priority queue
     while eq.qsize() != 0:
@@ -168,9 +172,34 @@ if __name__ == '__main__':
         elif event_top.get_type() == TIMEOUT_EVENT:
             process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
+        elif event_top.get_type() == DYNAMIC_ROUTING:
+            # create_dynamic_routing_event(event_top.get_init_time() + ROUTING_INTERVAL)
+            # Reset all the router's weight to infinity
+            for r in routers:
+                routers[r].reset_weight_table()
+
+            # Creates routing packet for each host and adds to queue
+            for host_id in hosts:
+                link = hosts[host_id].get_link()
+                routing_pkt = Packet(ROUTER_PACKET, link.get_weight(), host_id, None, None, None)
+                dest = link.get_link_endpoint(hosts[host_id])
+
+                insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
+                # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
+
+        elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
+            process_routing_packet_received_event(event_top, hosts, dropped_packets, global_time, routers)
+
+            # if counter == 2:
+            #     print_dict(links, 'LINKS')
+            #     print_dict(routers, 'ROUTERS')
+            #     exit(1)
+            # counter += 1
         else:
             assert False
 
+    print_dict(links, 'LINKS')
+    print_dict(routers, 'ROUTERS')
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)

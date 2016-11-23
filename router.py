@@ -10,12 +10,25 @@ class Router:
         # List of links
         self.link_lst = set()
 
+        self.weight_table = {}
+
     def set_routing_table(self, table):
         self.table = table
 
+        for k, v in table.iteritems():
+            self.weight_table[k] = (v, float('inf'))
+
     def get_routing_table(self):
         return self.table
+
+    def get_weight_table(self):
+        return self.weight_table
         
+    def reset_weight_table(self):
+        for k, v in self.weight_table.iteritems():
+            self.weight_table[k] = (v[0], float('inf'))
+        print "Rest: ", self.weight_table
+
     def add_link(self, link):
         ''' 
         Adds a Link object to the list
@@ -55,6 +68,7 @@ class Router:
     def __str__(self):
         print 'Router IP: ' + self.ip
         print 'Routing Table: ' + str(self.table)
+        print 'Weight Table: ' + str(self.weight_table)
         return ''
 
     def __repr__(self):

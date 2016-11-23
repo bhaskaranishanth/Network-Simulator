@@ -21,6 +21,27 @@ def create_packet_received_event(global_time, pkt, link, src, dest):
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
 
+def create_routing_packet_received_event(global_time, pkt, link, src, dest):
+    """
+    Takes in packet and link information, creates a PACKET_RECEIVED
+    event and adds it to the global queue. Returns the event
+    to make it easier to debug code.
+    """
+    # assert src[0] not in 'ST' or dest[0] not in 'ST'
+    new_event = Event(ROUTING_PACKET_RECEIVED, global_time, src, dest, pkt)
+    eq.put((new_event.get_initial_time(), new_event))
+    return new_event
+
+def create_dynamic_routing_event(routing_time):
+    """
+    Takes in packet and link information, creates a PACKET_RECEIVED
+    event and adds it to the global queue. Returns the event
+    to make it easier to debug code.
+    """
+    new_event = Event(DYNAMIC_ROUTING, routing_time, None, None, None)
+    eq.put((new_event.get_initial_time(), new_event))
+    return new_event
+
 
 def get_link_from_event(event_top, links):
     """
@@ -61,6 +82,26 @@ def insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_ti
         dropped_packets.append(curr_packet)
         next_link.increment_drop_packets()
 
+def insert_routing_packet_into_buffer(routing_pkt, next_link, dropped_packets, global_time, next_hop):
+    """
+    Function takes the given packet, converts it into an event, and adds it to the
+    link's buffer. If the packet is not able to be added to the buffer, it
+    will be dropped.
+    """
+    assert routing_pkt.get_curr_loc() == None
+
+    # Insert packet into buffer
+    if next_link.insert_into_buffer(routing_pkt, routing_pkt.get_capacity()):
+        if next_link.get_free_time() <= global_time:
+            if len(next_link.packet_queue) == 1:
+                print 'Creating received event from top element of queue'
+                create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
+                # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
+
+    else:
+        dropped_packets.append(routing_pkt)
+        next_link.increment_drop_packets()
+
 
 def create_timeout_event(end_time, pkt):
     """
@@ -72,6 +113,49 @@ def create_timeout_event(end_time, pkt):
     timeout_event = Event(TIMEOUT_EVENT, end_time, pkt.get_src(), pkt.get_dest(), pkt)
     eq.put((timeout_event.get_initial_time(), timeout_event))
     return timeout_event
+
+def process_routing_packet_received_event(event_top, hosts, dropped_packets, global_time, routers):
+    # Ignore routing packets sent to host
+    if event_top.get_dest() in hosts:
+        return 
+
+    # If routing table is not updated, we return
+    curr_router = event_top.get_dest()
+    weight_table = routers[curr_router].get_weight_table()
+    routing_pkt = event_top.get_data()
+    print weight_table
+    print type(routing_pkt.get_src())
+    curr_entity = routers if routing_pkt.get_src() in routers else hosts
+    pkt_src = curr_entity[routing_pkt.get_src()]
+
+    print "curr router: ", routers[curr_router]
+    print 'pkt source: ', routing_pkt
+
+    if weight_table[pkt_src][1] <= routing_pkt.get_payload():
+        print "current weight:", weight_table[pkt_src][1]
+        print "new weight:", routing_pkt.get_payload()
+        assert False
+        return
+
+
+    # Update packet weight
+    hop_entity = routers if event_top.get_src() in routers else hosts
+    weight_table[pkt_src] = (hop_entity[event_top.get_src()], routing_pkt.get_payload())
+    print 'Modified wieht table: ', weight_table
+    # if hop_entity == routers:
+    #     routers[curr_router].get_routing_table()[pkt_src] = hop_entity[event_top.get_src()]
+    routers[curr_router].get_routing_table()[pkt_src] = hop_entity[event_top.get_src()]
+    print routers[curr_router]
+
+
+
+    # Create new packets for all its neighbors
+    for l in routers[curr_router].get_links():
+        dest = l.get_link_endpoint(routers[curr_router])
+        new_weight = l.get_weight() + routing_pkt.get_payload()
+        assert routing_pkt.get_src() in hosts
+        new_pkt = Packet(ROUTER_PACKET, new_weight, routing_pkt.get_src(), None, None, None)
+        insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
 
 
 

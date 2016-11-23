@@ -2,8 +2,10 @@
 TIMEOUT_EVENT = "TIMEOUT_EVENT"
 LINK_TO_ENDPOINT = "LINK_TO_ENDPOINT"
 PACKET_RECEIVED = "PACKET_RECEIVED"
+DYNAMIC_ROUTING = "DYNAMIC_ROUTING"
+ROUTING_PACKET_RECEIVED = "ROUTING_PACKET_RECEIVED"
 
-type_events = [TIMEOUT_EVENT, LINK_TO_ENDPOINT, PACKET_RECEIVED]
+type_events = [TIMEOUT_EVENT, LINK_TO_ENDPOINT, PACKET_RECEIVED, DYNAMIC_ROUTING, ROUTING_PACKET_RECEIVED]
 
 
 class Event:
@@ -17,8 +19,8 @@ class Event:
     """
     def __init__(self, event_type, initial_time, src, dest, data):
         self.check_type(event_type)
-        assert type(src) == str
-        assert type(dest) == str
+        assert type(src) == str or event_type == DYNAMIC_ROUTING
+        assert type(dest) == str or event_type == DYNAMIC_ROUTING
 
         self.type = event_type
         self.src = src
@@ -76,6 +78,7 @@ class Event:
         print "Destination: ", self.dest
         print "Initial Time: ", self.initial_time
         print 'Event id: ', id(self)
-        print 'Packet id: ', self.event_data.packet_id
-        print 'Packet Type: ', self.event_data.get_type()
+        if self.event_data != None:
+            print 'Packet id: ', self.event_data.packet_id
+            print 'Packet Type: ', self.event_data.get_type()
         return ""

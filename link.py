@@ -56,7 +56,7 @@ class Link:
         '''
         Return weight of link.
         '''
-        return 1
+        return len(self.packet_queue)
 
     def get_trans_time(self):
         return self.trans_time
@@ -143,6 +143,7 @@ class Link:
         print 'Direction: ' + str(self.direction)
         print 'Source: ' + str(self.src.ip)
         print 'Destination: ' + str(self.dst.ip)
+        print 'Weight: ' + str(self.get_weight())
         return ''
 
     def __repr__(self):
