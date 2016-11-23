@@ -58,7 +58,7 @@ class Flow:
         n = int(ceil(self.data_size * 10**6 / MESSAGE_SIZE))
         for i in range(n):
             # Create new packet and add to list of packets
-            p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest(), self.get_src(), self.get_start())
+            p = Packet(MESSAGE_PACKET, MESSAGE_SIZE, self.get_src(), self.get_dest(), None, self.get_start())
             packets.append(p)
 
         return packets

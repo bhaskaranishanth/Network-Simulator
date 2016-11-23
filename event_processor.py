@@ -13,9 +13,11 @@ def create_packet_received_event(global_time, pkt, link, src, dest):
     event and adds it to the global queue. Returns the event
     to make it easier to debug code.
     """
+    # assert src[0] not in 'ST' or dest[0] not in 'ST'
     new_event = Event(PACKET_RECEIVED, 
         global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
         src, dest, pkt)
+    # print 'Received event: ', new_event
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
 
@@ -27,9 +29,9 @@ def get_link_from_event(event_top, links):
     """
     curr_link = None
     for l in links:
-        print event_top.get_src()
-        print event_top.get_dest()
-        print links[l].get_endpoints()[0]
+        # print event_top.get_src()
+        # print event_top.get_dest()
+        # print links[l].get_endpoints()[0]
         endpoints_id = (links[l].get_endpoints()[0].get_ip(), links[l].get_endpoints()[1].get_ip())
         if event_top.get_src() in endpoints_id and event_top.get_dest() in endpoints_id:
             curr_link = links[l]
@@ -44,20 +46,20 @@ def insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_ti
     link's buffer. If the packet is not able to be added to the buffer, it
     will be dropped.
     """
+    print 'Insert packet into buffer..'
+    print curr_packet
+    print next_hop
+    assert curr_packet.get_curr_loc() == next_hop.get_ip()
+
     # Insert packet into buffer
     if next_link.insert_into_buffer(curr_packet, curr_packet.get_capacity()):
         if next_link.get_free_time() <= global_time:
             if len(next_link.packet_queue) == 1:
-                # print 'Next packet: ', curr_packet
-                # print next_hop
-                # assert next_hop not in hosts.values()
-                # assert next_hop not in hosts
-                create_packet_received_event(global_time, curr_packet, next_link, curr_packet.get_curr_loc(), next_hop.get_ip())
-
+                print 'Creating received event from top element of queue'
+                create_packet_received_event(global_time, curr_packet, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
     else:
         dropped_packets.append(curr_packet)
         next_link.increment_drop_packets()
-        #assert False
 
 
 def create_timeout_event(end_time, pkt):
@@ -76,53 +78,48 @@ def create_timeout_event(end_time, pkt):
 def process_packet_received_event(event_top, global_time, links, routers, hosts, window_size, dropped_packets, acknowledged_packets):
     # Retrieve the previous link and remove the received
     # packet from the buffer
+    print 'Processing packet received event '
+    print '*' * 40
     curr_link = get_link_from_event(event_top, links)
     curr_packet = event_top.get_data()
     curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
-    print 'Removing from buffer.....'
-    print curr_link
+    print curr_packet
+    # print 'Removing from buffer.....'
+    # print curr_link
 
     # If there are still elements in the buffer, take the first packet 
     # out and send it across the link
     if len(curr_link.packet_queue) != 0:
         next_packet = curr_link.packet_queue[0]
 
-        # TODO: If curr_src represents destination, then shouldn't hosts
-        # handle acknowledgement here
-
         # Determine the source and destination of the new event to add to queue
         curr_entity = routers if next_packet.get_curr_loc() in routers else hosts
-        curr_src = curr_entity[next_packet.get_curr_loc()]
-        next_dest = curr_link.get_link_endpoint(curr_src)
+        next_dest = next_packet.get_curr_loc()
+        curr_src = curr_link.get_link_endpoint(curr_entity[next_packet.get_curr_loc()]).get_ip()
 
         # Create new event with the same packet
-        create_packet_received_event(global_time, next_packet, curr_link, curr_src.get_ip(), next_dest)
-        print 'Next packet: ', next_packet
-        print next_dest
-        # assert next_dest not in hosts.values()
-        # assert next_dest not in hosts
+        create_packet_received_event(global_time, next_packet, curr_link, curr_src, next_dest)
 
-
-    curr_packet.set_curr_loc(event_top.get_dest())
-    print 'This is curr location: ', event_top.get_data().get_curr_loc()
-    # exit(1)
+    # Sending packets into the next buffer
     # Router component
-    if event_top.get_data().get_curr_loc() in routers:
+    if curr_packet.get_curr_loc() in routers:
         print 'Packet received in router....'     
-        curr_router = routers[event_top.get_data().get_curr_loc()]
-
+        curr_router = routers[curr_packet.get_curr_loc()]
         next_hop = curr_router.get_routing_table()[hosts[curr_packet.get_dest()]]
         next_link = curr_router.get_link_for_dest(next_hop)
-        print 'This is packet: ', curr_packet
-        # break
+        curr_packet.set_curr_loc(next_hop.get_ip())
 
+        # Insert packet into the next link's buffer
         insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_time, next_hop)
 
-
     # Host receives a packet
-    elif event_top.get_data().get_curr_loc() in hosts:
-        curr_host = hosts[event_top.get_data().get_curr_loc()]
-        next_link = hosts[event_top.get_data().get_curr_loc()].get_link()
+    elif curr_packet.get_curr_loc() in hosts:
+        print 'Host receives a packet'
+        curr_host = hosts[curr_packet.get_curr_loc()]
+        next_link = hosts[curr_packet.get_curr_loc()].get_link()
+        next_dest = next_link.get_link_endpoint(curr_host)
+        curr_packet.set_curr_loc(next_dest.get_ip())
+
         # Acknowledgment packet received
         if curr_packet.get_type() == ACK_PACKET:
             print 'Acknowledged this shit'
@@ -137,76 +134,45 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
 
             # Convert packet from host queue into event and insert into buffer
             if curr_host.get_window_count() < window_size:
-                # assert False
-                # assert next_link.get_num_packets() - window_size < 0
                 while next_link.get_num_packets() < window_size:
                     pkt = curr_host.remove_packet()
                     if pkt != None:
+                        assert pkt.get_curr_loc() != None
                         if next_link.insert_into_buffer(pkt, pkt.get_capacity()):
                             assert next_link.get_free_time() <= global_time
                             if next_link.get_free_time() <= global_time:
-                                # hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
+                                curr_host.set_window_count(curr_host.get_window_count()+1)
                                 if len(next_link.packet_queue) == 1:
-                                    # assert pkt.get_dest() not in hosts
-                                    # assert pkt.get_src() not in hosts
-
-                                    next_hop = next_link.get_link_endpoint(curr_host)
-                                    # next_hop = curr_router.get_routing_table()[hosts[pkt.get_src()]].get_ip()
-                                    # assert next_hop not in hosts
-                                    create_packet_received_event(global_time, curr_packet, next_link, pkt.get_src(), next_hop)
+                                    create_packet_received_event(global_time, curr_packet, next_link, curr_host.get_ip(), next_dest.get_ip())
 
                                 dst_time = global_time + TIMEOUT_VAL
                                 create_timeout_event(dst_time, pkt)
-
-
+                        else:
+                            # Put the packet back into the host queue
+                            curr_host.insert_packet(pkt)
+                            break
                     else:
                         break
-
+        # Process other packets received by the hosts
         else:
-            # Other packets
             print 'Received host'
-            # if next_link.get_free_time() <= t:
             print 'Running...'
-            # Immediately insert the packet into the link buffer
-            dst_time = global_time
 
-            # Make sure the ack packet has the same id as the original packet
-            # print 'curr_packet ', curr_packet.get_dest()
-            # print 'curr_packet ', curr_packet.get_src()
-            curr_src = hosts[curr_packet.get_dest()]
-            next_dest = next_link.get_link_endpoint(curr_src)
-
-            p = Packet(ACK_PACKET, 1, curr_src.get_ip(), curr_packet.get_src(), next_dest, global_time)
+            # Create acknowlegment packet with same packet id as the original packet
+            p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
             p.packet_id = curr_packet.packet_id
-            # p.set_curr_loc(p.get_src())
-
-            # print event_top
-            # print p
-            # print 'Src: ', p.get_src()
-            # print 'Dst: ', p.get_dest()
-            # print 'Next dst: ', next_dest
-            # print p
-
-            # print 'Curr link ....'
-            # print next_link
-            # print 'This is src: ', event_src_loc
-            # print 'This is dst: ', event_dst_loc
 
             # Insert ack packet into the buffer
-            if next_link.insert_into_buffer(p, p.get_capacity()):
-                # print 'Inserting....'
-                print len(next_link.packet_queue)
-                # hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-                if len(next_link.packet_queue) == 1:
-                    # print 'Is only....'
-                    # assert next_dest not in hosts.values()
-                    # assert next_dest not in hosts
-                    create_packet_received_event(global_time, p, next_link, curr_src.get_ip(), next_dest)
+            insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
 
-            else:
-                dropped_packets.append(curr_packet)
-                next_link.increment_drop_packets()
-                #assert False
+            # if next_link.insert_into_buffer(p, p.get_capacity()):
+            #     # hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
+            #     if len(next_link.packet_queue) == 1:
+            #         create_packet_received_event(global_time, p, next_link, curr_src.get_ip(), next_dest)
+
+            # else:
+            #     dropped_packets.append(curr_packet)
+            #     next_link.increment_drop_packets()
 
 
 
@@ -223,19 +189,26 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
         else:
             acknowledged_packets[p_id] -= 1
     else:
-        print 'Creating timeout packet'
+        # print 'Creating timeout packet'
         curr_link = hosts[curr_packet.get_src()].get_link()
-        next_hop = curr_link.get_link_endpoint(hosts[curr_packet.get_src()])
+        next_hop = curr_link.get_link_endpoint(hosts[curr_packet.get_src()]).get_ip()
         # Create new packet
         p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), next_hop, global_time)
         p.packet_id = curr_packet.packet_id
         dropped_packets.append(p)
 
+        # print 'New timeout packet: ', p
+
         # Attempt to insert new packet back to buffer
         if curr_link.insert_into_buffer(p, p.get_capacity()):
+            # print 'Inserted into timeout buffer'
             hosts[curr_packet.get_src()].set_window_count(hosts[curr_packet.get_src()].get_window_count()+1)
             if curr_link.get_free_time() <= global_time:
+                # print curr_link.packet_queue
+                # for x in curr_link.packet_queue:
+                #     print x
                 if len(curr_link.packet_queue) == 1:
+                    # print 'Is first in queue'
                     assert p.get_curr_loc() == next_hop
                     create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop)
         else:

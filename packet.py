@@ -27,9 +27,10 @@ class Packet:
         self.set_capacity()
         self.check_payload(payload)
 
+
         assert type(src) == str
         assert type(dest) == str
-        assert type(curr_loc) == str
+        assert curr_loc == None or type(curr_loc) == str 
         
         self.payload = payload
         self.src = src
@@ -72,6 +73,7 @@ class Packet:
         return self.dest
 
     def get_curr_loc(self):
+        assert self.curr_loc != None
         return self.curr_loc
 
     def get_init_time(self):
@@ -98,6 +100,7 @@ class Packet:
 
     def set_curr_loc(self, curr_loc):
         assert type(curr_loc) == str
+        # assert self.curr_loc == None
         self.curr_loc = curr_loc
 
     def set_init_time(self, init_time):

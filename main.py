@@ -74,7 +74,6 @@ def initialize_packets(flows, hosts):
             #     break
 
 
-
 if __name__ == '__main__':
     # Process input
     hosts, routers, links, flows = process_input()
@@ -91,6 +90,19 @@ if __name__ == '__main__':
 
     window_size = 100
     initialize_packets(flows, hosts)
+
+    # Update every packets next hop location
+    for host_id in hosts:
+        link = hosts[host_id].get_link()
+        q_len = hosts[host_id].q.qsize()
+        for x in range(q_len):
+            x = hosts[host_id].q.get()
+            x.set_curr_loc(link.get_link_endpoint(hosts[host_id]).get_ip())
+            hosts[host_id].q.put(x)
+        assert hosts[host_id].q.qsize() == q_len
+
+
+
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
         link = hosts[host_id].get_link()
@@ -101,10 +113,12 @@ if __name__ == '__main__':
                 if curr_packet != None:
                     if link.insert_into_buffer(curr_packet, curr_packet.get_capacity()):
                         hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
+                        curr_src = hosts[curr_packet.get_src()]
+                        next_dest = link.get_link_endpoint(curr_src)
+                        # curr_packet.set_curr_loc(next_dest.get_ip())
+
                         if len(link.packet_queue) == 1:
-                            curr_src = hosts[curr_packet.get_src()]
-                            next_dest = link.get_link_endpoint(curr_src)
-                            create_packet_received_event(curr_packet.get_init_time(), curr_packet, link, curr_src.get_ip(), next_dest)
+                            create_packet_received_event(curr_packet.get_init_time(), curr_packet, link, curr_src.get_ip(), next_dest.get_ip())
                         create_timeout_event(TIMEOUT_VAL + curr_packet.get_init_time(), curr_packet)
                     else:
                         # Put packet back into the host since buffer is full

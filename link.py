@@ -50,7 +50,7 @@ class Link:
 
     def get_link_endpoint(self, start):
         assert isinstance(start, Router) or isinstance(start, Host)
-        return self.dst.get_ip() if self.src == start else self.src.get_ip()
+        return self.dst if self.src == start else self.src
 
     def get_weight(self):
         '''
@@ -91,12 +91,12 @@ class Link:
         a boolean indicating success or failure.
         """
         print 'insert_into_buffer....'
-        print 'capacity: ', self.capacity
-        print 'packet size: ', packet_size
-        print 'Buffer: ', self.buf
-        print type(self.capacity), type(packet_size), type(self.buf)
-        print self.capacity + packet_size > self.buf
-        print self.link_id
+        # print 'capacity: ', self.capacity
+        # print 'packet size: ', packet_size
+        # print 'Buffer: ', self.buf
+        # print type(self.capacity), type(packet_size), type(self.buf)
+        # print self.capacity + packet_size > self.buf
+        # print self.link_id
         if self.capacity + packet_size > self.buf:
             return False
         else:
@@ -117,10 +117,10 @@ class Link:
         a boolean indicating success or failure.
         """
         print 'remove_from_buffer....'
-        print 'capacity: ', self.capacity
-        print 'packet size: ', packet_size
-        print 'Buffer: ', self.buf
-        print self.link_id
+        # print 'capacity: ', self.capacity
+        # print 'packet size: ', packet_size
+        # print 'Buffer: ', self.buf
+        # print self.link_id
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
