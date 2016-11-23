@@ -165,21 +165,10 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
             # Insert ack packet into the buffer
             insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
 
-            # if next_link.insert_into_buffer(p, p.get_capacity()):
-            #     # hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-            #     if len(next_link.packet_queue) == 1:
-            #         create_packet_received_event(global_time, p, next_link, curr_src.get_ip(), next_dest)
-
-            # else:
-            #     dropped_packets.append(curr_packet)
-            #     next_link.increment_drop_packets()
-
-
-
 
 def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknowledged_packets):
     curr_packet = event_top.get_data()
-    curr_host = hosts[event_top.get_src()]
+    curr_host = hosts[curr_packet.get_src()]
     p_id = curr_packet.packet_id
 
     # Packet was acknowledged beforehand
@@ -190,25 +179,22 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
             acknowledged_packets[p_id] -= 1
     else:
         # print 'Creating timeout packet'
-        curr_link = hosts[curr_packet.get_src()].get_link()
-        next_hop = curr_link.get_link_endpoint(hosts[curr_packet.get_src()]).get_ip()
+        curr_link = curr_host.get_link()
+        next_hop = curr_link.get_link_endpoint(curr_host)
         # Create new packet
-        p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), next_hop, global_time)
+        p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), next_hop.get_ip(), global_time)
         p.packet_id = curr_packet.packet_id
         dropped_packets.append(p)
 
-        # print 'New timeout packet: ', p
-
         # Attempt to insert new packet back to buffer
+        # insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
+
+
         if curr_link.insert_into_buffer(p, p.get_capacity()):
-            # print 'Inserted into timeout buffer'
+            # Deal with WINDOW SHIT HERE
             hosts[curr_packet.get_src()].set_window_count(hosts[curr_packet.get_src()].get_window_count()+1)
             if curr_link.get_free_time() <= global_time:
-                # print curr_link.packet_queue
-                # for x in curr_link.packet_queue:
-                #     print x
                 if len(curr_link.packet_queue) == 1:
-                    # print 'Is first in queue'
                     assert p.get_curr_loc() == next_hop
                     create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop)
         else:
