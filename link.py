@@ -77,15 +77,19 @@ class Link:
     """ MUTATOR METHODS """
 
     def connect(self, src, dst):
-        '''
+        """
         Uses the link to connect the src and dst.
-        '''
+        """
         assert isinstance(src, Router) or isinstance(src, Host)
         assert isinstance(dst, Router) or isinstance(dst, Host)
         self.src = src
         self.dst = dst
 
     def insert_into_buffer(self, packet, packet_size):
+        """
+        Inserts the packet into the link's buffer and return
+        a boolean indicating success or failure.
+        """
         print 'insert_into_buffer....'
         print 'capacity: ', self.capacity
         print 'packet size: ', packet_size
@@ -108,6 +112,10 @@ class Link:
         return self.num_dropped_packets
         
     def remove_from_buffer(self, packet, packet_size):
+        """
+        Remove the packet from the link's buffer and return
+        a boolean indicating success or failure.
+        """
         print 'remove_from_buffer....'
         print 'capacity: ', self.capacity
         print 'packet size: ', packet_size

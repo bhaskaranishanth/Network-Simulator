@@ -26,21 +26,18 @@ class Packet:
         self.type = packet_type
         self.set_capacity()
         self.check_payload(payload)
-        
-        self.payload = payload
+
         assert type(src) == str
         assert type(dest) == str
+        assert type(curr_loc) == str
+        
+        self.payload = payload
         self.src = src
         self.dest = dest
-        assert type(curr_loc) == str
         self.curr_loc = curr_loc
         self.packet_id = id(self)
         self.init_time = init_time
 
-        # print src
-        # print dest
-
-        # assert src[0] != 'H' or dest[0] != 'H'
 
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
@@ -92,9 +89,11 @@ class Packet:
         self.payload = payload
 
     def set_src(self, src):
+        assert type(src) == str
         self.src = src
 
     def set_dest(self, dest):
+        assert type(dest) == str
         self.dest = dest
 
     def set_curr_loc(self, curr_loc):

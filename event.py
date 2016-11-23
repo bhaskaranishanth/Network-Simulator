@@ -17,9 +17,10 @@ class Event:
     """
     def __init__(self, event_type, initial_time, src, dest, data):
         self.check_type(event_type)
-        self.type = event_type
         assert type(src) == str
         assert type(dest) == str
+
+        self.type = event_type
         self.src = src
         self.dest = dest 
         self.initial_time = initial_time
@@ -53,9 +54,11 @@ class Event:
         self.type = event_type
 
     def set_src(self, src):
+        assert type(src) == str
         self.src = src
 
     def set_dest(self, dest):
+        assert type(dest) == str
         self.dest = dest
 
     def set_initial_time(self, initial_time):
