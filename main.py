@@ -70,8 +70,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 1:
-                break
+            # if count == 1000:
+            #     break
 
 
 if __name__ == '__main__':
@@ -173,8 +173,14 @@ if __name__ == '__main__':
             process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
         elif event_top.get_type() == DYNAMIC_ROUTING:
-            # create_dynamic_routing_event(event_top.get_init_time() + ROUTING_INTERVAL)
-            # Reset all the router's weight to infinity
+            # create_dynamic_routing_event(event_top.get_initial_time() + ROUTING_INTERVAL)
+            # # Reset all the router's weight to infinity
+            # if counter == 4:
+            #     print_dict(links, 'LINKS')
+            #     print_dict(routers, 'ROUTERS')
+            #     break
+            # counter += 1
+
             for r in routers:
                 routers[r].reset_weight_table()
 
@@ -190,14 +196,13 @@ if __name__ == '__main__':
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
 
-            # if counter == 2:
-            #     print_dict(links, 'LINKS')
-            #     print_dict(routers, 'ROUTERS')
-            #     exit(1)
-            # counter += 1
         else:
             assert False
 
+
+    for l in links:
+        assert len(links[l].packet_queue) == 0
+    
     print_dict(links, 'LINKS')
     print_dict(routers, 'ROUTERS')
     print 'Completed everything '

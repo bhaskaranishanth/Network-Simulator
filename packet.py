@@ -51,7 +51,7 @@ class Packet:
         assert packet_type == MESSAGE_PACKET or packet_type == ACK_PACKET or packet_type == ROUTER_PACKET
 
     def check_payload(self, payload):
-        assert payload <= self.capacity
+        assert payload <= self.capacity or self.type == ROUTER_PACKET
 
 
     """ MUTATOR METHODS """

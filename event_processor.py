@@ -78,6 +78,9 @@ def insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_ti
             if len(next_link.packet_queue) == 1:
                 print 'Creating received event from top element of queue'
                 create_packet_received_event(global_time, curr_packet, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
+            else:
+                print "link num:", next_link
+                print "size of next link buffer:", len(next_link.packet_queue)
     else:
         dropped_packets.append(curr_packet)
         next_link.increment_drop_packets()
@@ -100,10 +103,18 @@ def insert_routing_packet_into_buffer(routing_pkt, next_link, dropped_packets, g
                 create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
                 print "global time:", global_time
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
-
+            else:
+                print "link num:", next_link
+                print "size of next link buffer:", len(next_link.packet_queue)
     else:
         dropped_packets.append(routing_pkt)
         next_link.increment_drop_packets()
+
+    if routing_pkt.get_src() == 'H2':
+        print next_link
+        print len(next_link.packet_queue)
+        print routing_pkt
+        exit(1)
 
 
 def create_timeout_event(end_time, pkt):
@@ -120,6 +131,9 @@ def create_timeout_event(end_time, pkt):
 def create_next_packet_event(curr_link, global_time, event_top, hosts, routers):
     if len(curr_link.packet_queue) != 0:
         next_packet = curr_link.packet_queue[0]
+        if next_packet.get_src() == 'H2' and next_packet.get_type == ROUTER_PACKET:
+            print "packet src is H2"
+            exit(1)
 
         if next_packet.get_type() == ROUTER_PACKET:
             new_src = event_top.get_dest()
@@ -144,7 +158,7 @@ def process_routing_packet_received_event(event_top, hosts, links, dropped_packe
     curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
 
     create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
-
+    print "yay!"
     if event_top.get_dest() in hosts:
         return 
 
@@ -265,6 +279,9 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                                 curr_host.set_window_count(curr_host.get_window_count()+1)
                                 if len(next_link.packet_queue) == 1:
                                     create_packet_received_event(global_time, curr_packet, next_link, curr_host.get_ip(), next_dest.get_ip())
+                                else:
+                                    print "link num:", next_link
+                                    print "size of next link buffer:", len(next_link.packet_queue)
 
                                 dst_time = global_time + TIMEOUT_VAL
                                 create_timeout_event(dst_time, pkt)
@@ -318,6 +335,9 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
                 if len(curr_link.packet_queue) == 1:
                     assert p.get_curr_loc() == next_hop
                     create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop)
+                else:
+                    print "link num:", curr_link
+                    print "size of next link buffer:", len(curr_link.packet_queue)
         else:
 
         # Create a timeout event for the new packet

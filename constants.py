@@ -5,4 +5,4 @@ FLOW_FILE = './conf/flow1.conf'
 
 
 TIMEOUT_VAL = 1
-ROUTING_INTERVAL = 5
+ROUTING_INTERVAL = 3

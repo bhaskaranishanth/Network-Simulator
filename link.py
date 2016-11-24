@@ -103,6 +103,8 @@ class Link:
             self.capacity += packet_size
             self.num_packets += 1
             self.packet_queue.append(packet)
+            if self.link_id == 'L5':
+                print "buffer occupancy:", len(self.packet_queue)
             return True
 
     def increment_drop_packets(self):
