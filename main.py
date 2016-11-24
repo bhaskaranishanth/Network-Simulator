@@ -188,7 +188,7 @@ if __name__ == '__main__':
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
 
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
-            process_routing_packet_received_event(event_top, hosts, dropped_packets, global_time, routers)
+            process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
 
             # if counter == 2:
             #     print_dict(links, 'LINKS')
