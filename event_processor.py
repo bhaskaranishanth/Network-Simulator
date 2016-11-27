@@ -13,11 +13,9 @@ def create_packet_received_event(global_time, pkt, link, src, dest):
     event and adds it to the global queue. Returns the event
     to make it easier to debug code.
     """
-    # assert src[0] not in 'ST' or dest[0] not in 'ST'
     new_event = Event(PACKET_RECEIVED, 
         global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
         src, dest, pkt)
-    # print 'Received event: ', new_event
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
 
@@ -27,7 +25,6 @@ def create_routing_packet_received_event(global_time, pkt, link, src, dest):
     event and adds it to the global queue. Returns the event
     to make it easier to debug code.
     """
-    # assert src[0] not in 'ST' or dest[0] not in 'ST'
     new_event = Event(ROUTING_PACKET_RECEIVED, 
         global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
         src, dest, pkt)
@@ -52,9 +49,6 @@ def get_link_from_event(event_top, links):
     """
     curr_link = None
     for l in links:
-        # print event_top.get_src()
-        # print event_top.get_dest()
-        # print links[l].get_endpoints()[0]
         endpoints_id = (links[l].get_endpoints()[0].get_ip(), links[l].get_endpoints()[1].get_ip())
         if event_top.get_src() in endpoints_id and event_top.get_dest() in endpoints_id:
             curr_link = links[l]

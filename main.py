@@ -86,9 +86,7 @@ if __name__ == '__main__':
     # Create routing table
     d = Djikstra()
     d.update_routing_table(routers.values())
-    # print_dict(routers, 'ROUTERS')
 
-    # window_size = 100
     initialize_packets(flows, hosts)
 
     # Update every packets next hop location
@@ -106,43 +104,29 @@ if __name__ == '__main__':
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
         link = hosts[host_id].get_link()
-        if hosts[host_id].get_window_count() < hosts[host_id].get_window_size():
-            # Load window number of packets from host queue to buffer
-            while link.get_num_packets() < hosts[host_id].get_window_size():
-                curr_packet = hosts[host_id].remove_packet()
-                if curr_packet != None:
-                    if link.insert_into_buffer(curr_packet, curr_packet.get_capacity()):
-                        hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
-                        curr_src = hosts[curr_packet.get_src()]
-                        next_dest = link.get_link_endpoint(curr_src)
-                        # curr_packet.set_curr_loc(next_dest.get_ip())
+        # Load window number of packets from host queue to buffer
+        while hosts[host_id].get_window_count() < hosts[host_id].get_window_size():
+            curr_packet = hosts[host_id].remove_packet()
+            if curr_packet != None:
+                if link.insert_into_buffer(curr_packet, curr_packet.get_capacity()):
+                    hosts[host_id].set_window_count(hosts[host_id].get_window_count()+1)
+                    curr_src = hosts[curr_packet.get_src()]
+                    next_dest = link.get_link_endpoint(curr_src)
+                    # curr_packet.set_curr_loc(next_dest.get_ip())
 
-                        if len(link.packet_queue) == 1:
-                            create_packet_received_event(curr_packet.get_init_time(), curr_packet, link, curr_src.get_ip(), next_dest.get_ip())
-                        create_timeout_event(TIMEOUT_VAL + curr_packet.get_init_time(), curr_packet)
-                    else:
-                        # Put packet back into the host since buffer is full
-                        hosts[host_id].insert_packet(curr_packet)
-                        break
+                    if len(link.packet_queue) == 1:
+                        create_packet_received_event(curr_packet.get_init_time(), curr_packet, link, curr_src.get_ip(), next_dest.get_ip())
+                    create_timeout_event(TIMEOUT_VAL + curr_packet.get_init_time(), curr_packet)
                 else:
+                    # Put packet back into the host since buffer is full
+                    hosts[host_id].insert_packet(curr_packet)
                     break
-
-        else:
-            pass
-            # TODO
+            else:
+                break
 
     create_dynamic_routing_event(ROUTING_INTERVAL)
 
 
-######## Link might need both directions because one links buffer might be full 
-#### while on the other direction, it can be full too
-####### It may be possible for ack packets to come back out of order
-####### Timeout event happens first, then ack packet is received.
-###### Flow has its own start time
-###### Do acknowledgement packets need to be in the buffer
-###### Create event processing class to handle all different types of events
-###### Event should only have the current src and dst, packet has total distance, LINK_TO_ENDPOINT is the only exception
-###### Implement window counter for each host
 
     global_time = 0
     acknowledged_packets = {}
@@ -189,7 +173,7 @@ if __name__ == '__main__':
                 insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
 
-            # create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
+            create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
 
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
@@ -208,7 +192,7 @@ if __name__ == '__main__':
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)
-    # graph_pck_buf(pck_graph)
+    graph_pck_buf(pck_graph)
     graph_window_size(window_size_list)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
