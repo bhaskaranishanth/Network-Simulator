@@ -14,6 +14,19 @@ def drop_packets(time, links):
         drop_packets_list.append([link_id, time, link.get_drop_packets()])
     return drop_packets_list
 
+def graph_window_size(window_size_list):
+    lines = []
+    x = [elem[0] for elem in window_size_list]
+    y = [elem[1] for elem in window_size_list]
+    line_up, = plt.plot(x, y, linewidth = 2.0)
+    lines.append(line_up)
+
+    plt.ylabel("Window Size")
+    plt.xlabel("Time")
+    plt.legend()
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
+
 def graph_pck_drop_rate(drop_packets):
     max_time = int(drop_packets[len(drop_packets) - 1][0][1]) + 1
     drop_rate_arr = [[0 for y in range(max_time)] for z in range(len(drop_packets[0]))]
@@ -67,13 +80,13 @@ def graph_pck_buf(points):
     for i in range(len(points[0])):
         x = [elem[0][1] for elem in points]
         y = [elem[i][2] for elem in points]
-        # if points[0][i][0] in ['L5', 'L1']:
-        line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
-        lines.append(line_up)
+        if points[0][i][0] in ['L2', 'L1']:
+            line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
+            lines.append(line_up)
 
     plt.ylabel("Packets In Buffer")
     plt.xlabel("Time")
-    plt.legend(lines)
+    plt.legend()
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 

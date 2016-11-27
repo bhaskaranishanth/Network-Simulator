@@ -1,4 +1,5 @@
 from Queue import Queue
+from constants import *
 
 class Host:
     """
@@ -10,6 +11,7 @@ class Host:
         # Queue of packets that need to be sent
         self.q = Queue()
         self.window_count = 0
+        self.window_size = WINDOW_SIZE
 
     
     """ ACCESSOR METHODS """
@@ -29,6 +31,9 @@ class Host:
     def get_window_count(self):
         return self.window_count
 
+    def get_window_size(self):
+        return self.window_size
+
 
     """ MUTATOR METHODS """
 
@@ -41,6 +46,9 @@ class Host:
         
     def set_window_count(self, window_count):
         self.window_count = window_count
+
+    def set_window_size(self, window_size):
+        self.window_size = window_size
 
     def insert_packet(self, packet):
         self.q.put(packet)
@@ -57,6 +65,8 @@ class Host:
     def __str__(self):
         print 'Host IP: ' + self.ip
         print 'Link ID: ' + self.link.link_id
+        print 'Window size:', self.get_window_size()
+        print 'Window count:', self.get_window_count()
         return ''
 
     def __repr__(self):

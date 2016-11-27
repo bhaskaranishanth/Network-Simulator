@@ -96,15 +96,13 @@ class Link:
         # print 'Buffer: ', self.buf
         # print type(self.capacity), type(packet_size), type(self.buf)
         # print self.capacity + packet_size > self.buf
-        # print self.link_id
+        print self.link_id
         if self.capacity + packet_size > self.buf:
             return False
         else:
             self.capacity += packet_size
             self.num_packets += 1
             self.packet_queue.append(packet)
-            if self.link_id == 'L5':
-                print "buffer occupancy:", len(self.packet_queue)
             return True
 
     def increment_drop_packets(self):
@@ -122,12 +120,13 @@ class Link:
         # print 'capacity: ', self.capacity
         # print 'packet size: ', packet_size
         # print 'Buffer: ', self.buf
-        # print self.link_id
+        print self.link_id
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
         self.num_packets -= 1
         popped_pkt = self.packet_queue.popleft()
+
         assert popped_pkt == packet
         assert self.num_packets >= 0
 

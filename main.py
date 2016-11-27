@@ -78,17 +78,17 @@ if __name__ == '__main__':
     # Process input
     hosts, routers, links, flows = process_input()
 
-    print_dict(hosts, 'HOSTS')
-    print_dict(routers, 'ROUTERS')
-    print_dict(links, 'LINKS')
-    print_dict(flows, 'FLOWS')
+    # print_dict(hosts, 'HOSTS')
+    # print_dict(routers, 'ROUTERS')
+    # print_dict(links, 'LINKS')
+    # print_dict(flows, 'FLOWS')
 
     # Create routing table
     d = Djikstra()
     d.update_routing_table(routers.values())
-    print_dict(routers, 'ROUTERS')
+    # print_dict(routers, 'ROUTERS')
 
-    window_size = 100
+    # window_size = 100
     initialize_packets(flows, hosts)
 
     # Update every packets next hop location
@@ -106,9 +106,9 @@ if __name__ == '__main__':
     # Fills up all the link's buffers connected to the host 
     for host_id in hosts:
         link = hosts[host_id].get_link()
-        if hosts[host_id].get_window_count() < window_size:
+        if hosts[host_id].get_window_count() < hosts[host_id].get_window_size():
             # Load window number of packets from host queue to buffer
-            while link.get_num_packets() < window_size:
+            while link.get_num_packets() < hosts[host_id].get_window_size():
                 curr_packet = hosts[host_id].remove_packet()
                 if curr_packet != None:
                     if link.insert_into_buffer(curr_packet, curr_packet.get_capacity()):
@@ -149,6 +149,7 @@ if __name__ == '__main__':
     pck_graph = []
     dropped_packets = []
     pck_drop_graph = []
+    window_size_list = []
 
     counter = 0
 
@@ -161,14 +162,14 @@ if __name__ == '__main__':
         pck_drop_graph.append(drop_packets(t, links))
         assert t != None
         global_time = t
-        print t, event_top
+        # print t, event_top
 
         assert event_top.get_type() != LINK_TO_ENDPOINT
 
         # Host or Router receives a packet
         if event_top.get_type() == PACKET_RECEIVED:
             process_packet_received_event(event_top, global_time, links, routers, 
-                hosts, window_size, dropped_packets, acknowledged_packets)
+                hosts, dropped_packets, acknowledged_packets, window_size_list)
         elif event_top.get_type() == TIMEOUT_EVENT:
             process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
@@ -188,7 +189,7 @@ if __name__ == '__main__':
                 insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
 
-            create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
+            # create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
 
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
@@ -199,13 +200,16 @@ if __name__ == '__main__':
 
     for l in links:
         assert len(links[l].packet_queue) == 0
-    
-    print_dict(links, 'LINKS')
+
+    print_dict(hosts, 'HOSTS')
     print_dict(routers, 'ROUTERS')
+    print_dict(links, 'LINKS')
+    print_dict(flows, 'FLOWS')
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)
-    graph_pck_buf(pck_graph)
+    # graph_pck_buf(pck_graph)
+    graph_window_size(window_size_list)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
     # graph_pck_drop_rate(pck_drop_graph)

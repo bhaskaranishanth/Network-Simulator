@@ -18,6 +18,10 @@ Does the ack packet go through the link as fast as possible?
 It is possible for the ack packets to come out of order, right?
 
 
+For TCP Reno, can we use global knowledge (i.e. dropped packets) to change a host's window size?
+
+
+
 
 
 
