@@ -70,8 +70,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            if count == 1000:
-                break
+            # if count == 1000:
+            #     break
 
 
 if __name__ == '__main__':
@@ -174,20 +174,13 @@ if __name__ == '__main__':
                 acknowledged_packets)
         elif event_top.get_type() == DYNAMIC_ROUTING:
             # create_dynamic_routing_event(event_top.get_initial_time() + ROUTING_INTERVAL)
-            # # Reset all the router's weight to infinity
-            # if counter == 4:
-            #     print_dict(links, 'LINKS')
-            #     print_dict(routers, 'ROUTERS')
-            #     break
-            # counter += 1
-
             for r in routers:
                 routers[r].reset_weight_table()
 
             # Creates routing packet for each host and adds to queue
             for host_id in hosts:
                 link = hosts[host_id].get_link()
-                routing_pkt = Packet(ROUTER_PACKET, link.get_weight(), host_id, None, None, None)
+                routing_pkt = Packet(ROUTER_PACKET, link.get_weight(), host_id, None, link.get_link_endpoint(hosts[host_id]).get_ip(), None)
                 dest = link.get_link_endpoint(hosts[host_id])
 
                 insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)

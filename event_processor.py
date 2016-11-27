@@ -28,7 +28,9 @@ def create_routing_packet_received_event(global_time, pkt, link, src, dest):
     to make it easier to debug code.
     """
     # assert src[0] not in 'ST' or dest[0] not in 'ST'
-    new_event = Event(ROUTING_PACKET_RECEIVED, global_time, src, dest, pkt)
+    new_event = Event(ROUTING_PACKET_RECEIVED, 
+        global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
+        src, dest, pkt)
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
 
@@ -91,21 +93,17 @@ def insert_routing_packet_into_buffer(routing_pkt, next_link, dropped_packets, g
     link's buffer. If the packet is not able to be added to the buffer, it
     will be dropped.
     """
-    assert routing_pkt.get_curr_loc() == None
+    assert routing_pkt.get_dest() == None
+    assert routing_pkt.get_type() == ROUTER_PACKET
 
     # Insert packet into buffer
     if next_link.insert_into_buffer(routing_pkt, routing_pkt.get_capacity()):
-        print "inserted"
+        if routing_pkt.get_src() == 'H2':
+            next_link.print_link_buffer()
+            # exit(1)
         if next_link.get_free_time() <= global_time:
-            print "link is free"
             if len(next_link.packet_queue) == 1:
-                print 'Creating received event from top element of queue'
                 create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
-                print "global time:", global_time
-                # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
-            else:
-                print "link num:", next_link
-                print "size of next link buffer:", len(next_link.packet_queue)
     else:
         dropped_packets.append(routing_pkt)
         next_link.increment_drop_packets()
@@ -132,15 +130,17 @@ def create_timeout_event(end_time, pkt):
 def create_next_packet_event(curr_link, global_time, event_top, hosts, routers):
     if len(curr_link.packet_queue) != 0:
         next_packet = curr_link.packet_queue[0]
-        if next_packet.get_src() == 'H2' and next_packet.get_type == ROUTER_PACKET:
+        if next_packet.get_src() == 'H2' and next_packet.get_type() == ROUTER_PACKET:
             print "packet src is H2"
-            exit(1)
+            print next_packet
+            print event_top
+            # exit(1)
 
         if next_packet.get_type() == ROUTER_PACKET:
-            new_src = event_top.get_dest()
-            curr_entity = routers if new_src in routers else hosts
-            new_dest = curr_link.get_link_endpoint(curr_entity[new_src])
-            create_routing_packet_received_event(global_time, next_packet, curr_link, new_src, new_dest.get_ip())
+            new_dest = next_packet.get_curr_loc()
+            curr_entity = routers if new_dest in routers else hosts
+            new_src = curr_link.get_link_endpoint(curr_entity[new_dest])
+            create_routing_packet_received_event(global_time, next_packet, curr_link, new_src.get_ip(), new_dest)
 
         else:
             # Determine the source and destination of the new event to add to queue
@@ -153,13 +153,13 @@ def create_next_packet_event(curr_link, global_time, event_top, hosts, routers):
 
 
 def process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers):
-    # Ignore routing packets sent to host
     curr_link = get_link_from_event(event_top, links)
     curr_packet = event_top.get_data()
     curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
 
     create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
     print "yay!"
+    # Ignore routing packets sent to host
     if event_top.get_dest() in hosts:
         return 
 
@@ -198,7 +198,7 @@ def process_routing_packet_received_event(event_top, hosts, links, dropped_packe
         dest = l.get_link_endpoint(routers[curr_router])
         new_weight = l.get_weight() + routing_pkt.get_payload()
         assert routing_pkt.get_src() in hosts
-        new_pkt = Packet(ROUTER_PACKET, new_weight, routing_pkt.get_src(), None, None, None)
+        new_pkt = Packet(ROUTER_PACKET, new_weight, routing_pkt.get_src(), None, dest.get_ip(), None)
         print "link:", l
         print insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
         print "new packet:", new_pkt

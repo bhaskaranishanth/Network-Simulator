@@ -127,11 +127,17 @@ class Link:
             assert False
         self.capacity -= packet_size
         self.num_packets -= 1
-        self.packet_queue.popleft()
+        popped_pkt = self.packet_queue.popleft()
+        assert popped_pkt == packet
         assert self.num_packets >= 0
 
     def update_next_free_time(self, free_time):
         self.next_free_time = free_time
+
+    def print_link_buffer(self):
+        print 'Printing link %s buffer' % (self.link_id)
+        for x in self.packet_queue:
+            print x
 
 
     """ PRINT METHODS """
