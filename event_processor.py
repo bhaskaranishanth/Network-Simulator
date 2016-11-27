@@ -110,11 +110,12 @@ def insert_routing_packet_into_buffer(routing_pkt, next_link, dropped_packets, g
         dropped_packets.append(routing_pkt)
         next_link.increment_drop_packets()
 
-    if routing_pkt.get_src() == 'H2':
-        print next_link
-        print len(next_link.packet_queue)
-        print routing_pkt
-        exit(1)
+    # if routing_pkt.get_src() == 'H2':
+    #     print next_link
+    #     print len(next_link.packet_queue)
+    #     print routing_pkt
+    #     print "what"
+    #     exit(1)
 
 
 def create_timeout_event(end_time, pkt):

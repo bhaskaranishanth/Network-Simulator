@@ -70,8 +70,8 @@ def initialize_packets(flows, hosts):
             count += 1
             hosts[flows[key].get_src()].insert_packet(packet)
 
-            # if count == 1000:
-            #     break
+            if count == 1000:
+                break
 
 
 if __name__ == '__main__':
