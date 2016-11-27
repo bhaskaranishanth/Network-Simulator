@@ -173,6 +173,8 @@ if __name__ == '__main__':
             process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
         elif event_top.get_type() == DYNAMIC_ROUTING:
+            if eq.qsize() == 0:
+                break
             # create_dynamic_routing_event(event_top.get_initial_time() + ROUTING_INTERVAL)
             for r in routers:
                 routers[r].reset_weight_table()
@@ -185,6 +187,8 @@ if __name__ == '__main__':
 
                 insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
+
+            create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
 
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
