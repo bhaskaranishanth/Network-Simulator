@@ -11,6 +11,31 @@ from event import *
 from event_processor import *
 from graph import *
 import matplotlib.pyplot as plt 
+from packet import *
+
+def get_base_RTT(hosts):
+    base_RTT_table = {}
+    for h1 in hosts.values():
+        for h2 in hosts.values():
+            if h1 != h2:
+                tup = (h1,h2)
+                if tup not in base_RTT_table:
+                    time = 0
+                    link_adj = h1.get_link()
+                    time += link_adj.get_prop_time() + MESSAGE_SIZE/link_adj.get_trans_time()
+                    dest = link_adj.get_link_endpoint(h1)
+                    print h1.get_ip()
+                    print h2.get_ip()
+                    print "Dest: ", dest
+                    while dest != h2: 
+                        new_dest = dest.get_routing_table()[h2] 
+                        link_adj = dest.get_link_for_dest(new_dest)
+                        time += link_adj.get_prop_time() + MESSAGE_SIZE/link_adj.get_trans_time()
+                        dest = new_dest
+                    time *= 2
+                    base_RTT_table[tup] = time 
+    return base_RTT_table
+
 
 def process_input():
     host_f = open(HOST_FILE, 'r')
@@ -86,6 +111,7 @@ if __name__ == '__main__':
     # Create routing table
     d = Djikstra()
     d.update_routing_table(routers.values())
+    base_rtt_table = get_base_RTT(hosts)
 
     initialize_packets(flows, hosts)
 
@@ -192,11 +218,16 @@ if __name__ == '__main__':
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)
+
     print window_size_list
     graph_pck_buf(pck_graph)
     graph_window_size(window_size_list)
+
+    # graph_pck_buf(pck_graph)
+    # graph_window_size(window_size_list)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
+    # print(pck_drop_graph)
     # graph_pck_drop_rate(pck_drop_graph)
     # graph_pck_buf(pck_graph)
 
