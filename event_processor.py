@@ -14,7 +14,7 @@ def create_packet_received_event(global_time, pkt, link, src, dest):
     to make it easier to debug code.
     """
     new_event = Event(PACKET_RECEIVED, 
-        global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
+        global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
         src, dest, pkt)
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
@@ -26,7 +26,7 @@ def create_routing_packet_received_event(global_time, pkt, link, src, dest):
     to make it easier to debug code.
     """
     new_event = Event(ROUTING_PACKET_RECEIVED, 
-        global_time + pkt.get_capacity() / link.get_prop_time() + link.get_trans_time(), 
+        global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
         src, dest, pkt)
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
