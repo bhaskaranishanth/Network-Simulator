@@ -12,6 +12,7 @@ class Host:
         self.q = Queue()
         self.window_count = 0
         self.window_size = WINDOW_SIZE
+        self.threshold = THRESHOLD
 
     
     """ ACCESSOR METHODS """
@@ -34,6 +35,9 @@ class Host:
     def get_window_size(self):
         return self.window_size
 
+    def get_threshold(self):
+        return self.threshold
+
 
     """ MUTATOR METHODS """
 
@@ -49,6 +53,9 @@ class Host:
 
     def set_window_size(self, window_size):
         self.window_size = window_size
+
+    def set_threshold(self, threshold):
+        self.threshold = threshold
 
     def insert_packet(self, packet):
         self.q.put(packet)

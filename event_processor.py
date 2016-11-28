@@ -197,18 +197,25 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
         # Acknowledgment packet received
         if curr_packet.get_type() == ACK_PACKET:
             print 'Acknowledged this shit'
-            curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
-            print "window size 1:", curr_host.get_window_size()
+            if curr_host.get_window_size() < curr_host.get_threshold():
+                curr_host.set_window_size(curr_host.get_window_size() + 1.0)
+                
+            else:
+                curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
+            print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
             window_size_list.append((global_time, curr_host.get_window_size()))
 
             # Insert acknowledgement into dictionary
             if curr_packet.packet_id in acknowledged_packets:
                 acknowledged_packets[curr_packet.packet_id] += 1
                 if acknowledged_packets[curr_packet.packet_id] > 3:
+                    # exit(1)
                     acknowledged_packets[curr_packet.packet_id] -= 3
                     curr_host.set_window_size(curr_host.get_window_size() / 2.0)
+                    curr_host.set_threshold(curr_host.get_window_size())
                     print "window size 2:", curr_host.get_window_size()
                     window_size_list.append((global_time, curr_host.get_window_size()))
+                    print "threshold:", curr_host.get_threshold()
             else:
                 acknowledged_packets[curr_packet.packet_id] = 1
                 # Perform this ack only based on certain acks
@@ -262,6 +269,10 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
     #         assert acknowledged_packets[p_id] > 0
     if p_id not in acknowledged_packets:
         # print 'Creating timeout packet'
+        curr_host.set_threshold(curr_host.get_window_size() / 2.0)
+        curr_host.set_window_size(1)
+        print "window size 3: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
+
         curr_link = curr_host.get_link()
         next_hop = curr_link.get_link_endpoint(curr_host)
         # Create new packet
