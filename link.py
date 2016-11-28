@@ -11,9 +11,9 @@ class Link:
         # Buffer size given in KB
         self.buf = float(buf) * 10 ** 3
         # Prop time given in Mbps
-        self.prop_time = float(prop_time) * (10 ** 6) / 8
+        self.prop_time = float(trans_time) * 10 ** (-3)
         # Trans time given in ms
-        self.trans_time = float(trans_time) * 10 ** (-3)
+        self.trans_time = float(prop_time) * (10 ** 6) / 8
         self.congestion = congestion
         self.direction = direction
 
