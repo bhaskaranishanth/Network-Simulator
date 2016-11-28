@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
                     if len(link.packet_queue) == 1:
                         create_packet_received_event(curr_packet.get_init_time(), curr_packet, link, curr_src.get_ip(), next_dest.get_ip())
-                    create_timeout_event(TIMEOUT_VAL + curr_packet.get_init_time(), curr_packet)
+                    create_timeout_event(TIMEOUT_VAL + curr_packet.get_init_time(), curr_packet, curr_packet.get_init_time())
                 else:
                     # Put packet back into the host since buffer is full
                     hosts[host_id].insert_packet(curr_packet)
@@ -192,6 +192,7 @@ if __name__ == '__main__':
     print 'Completed everything '
     # print len(dropped_packets)
     # # print(pck_graph)
+    print window_size_list
     graph_pck_buf(pck_graph)
     graph_window_size(window_size_list)
     # points = format_drop_to_rate(pck_drop_graph)

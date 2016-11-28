@@ -11,3 +11,6 @@ THRESHOLD = 1000
 
 ALPHA = 15
 GAMMA = 0.5
+
+# If FAST = 1, use Fast TCP. Otherwise, TCP Reno. 
+FAST = 0

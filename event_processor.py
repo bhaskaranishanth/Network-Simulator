@@ -95,13 +95,13 @@ def insert_routing_packet_into_buffer(routing_pkt, next_link, dropped_packets, g
         next_link.increment_drop_packets()
 
 
-def create_timeout_event(end_time, pkt):
+def create_timeout_event(end_time, pkt, global_time):
     """
     Takes in end time and packet, creates a TIMEOUT_EVENT
     event and adds it to the global queue. Returns the event
     to make it easier to debug code.
     """
-
+    pkt.set_init_time(global_time)
     timeout_event = Event(TIMEOUT_EVENT, end_time, pkt.get_src(), pkt.get_dest(), pkt)
     eq.put((timeout_event.get_initial_time(), timeout_event))
     return timeout_event
@@ -205,17 +205,31 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
             print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
             window_size_list.append((global_time, curr_host.get_window_size()))
 
+            if FAST:
+
+                RTT = global_time - curr_packet.get_init_time()
+                base_RTT = 0.1
+                w = curr_host.get_window_size()
+                if min(2 * w, (1 - GAMMA) * w + GAMMA * (base_RTT / RTT * w + ALPHA)) == 2 * w:
+                    print "changing window size: double"
+                else:
+                    print "changing window size: gamma"
+                curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (base_RTT / RTT * w + ALPHA)))
+                print "changing fast window size:", curr_host.get_window_size()
+                if curr_host == 'S1':
+                    window_size_list.append((global_time, curr_host.get_window_size()))
+
             # Insert acknowledgement into dictionary
             if curr_packet.packet_id in acknowledged_packets:
                 acknowledged_packets[curr_packet.packet_id] += 1
-                if acknowledged_packets[curr_packet.packet_id] > 3:
-                    # exit(1)
-                    acknowledged_packets[curr_packet.packet_id] -= 3
-                    curr_host.set_window_size(curr_host.get_window_size() / 2.0)
-                    curr_host.set_threshold(curr_host.get_window_size())
-                    print "window size 2:", curr_host.get_window_size()
-                    window_size_list.append((global_time, curr_host.get_window_size()))
-                    print "threshold:", curr_host.get_threshold()
+                if not FAST:
+                    if acknowledged_packets[curr_packet.packet_id] > 3:
+                        acknowledged_packets[curr_packet.packet_id] -= 3
+                        curr_host.set_window_size(curr_host.get_window_size() / 2.0)
+                        curr_host.set_threshold(curr_host.get_window_size())
+                        print "window size 2:", curr_host.get_window_size()
+                        window_size_list.append((global_time, curr_host.get_window_size()))
+                        print "threshold:", curr_host.get_threshold()
             else:
                 acknowledged_packets[curr_packet.packet_id] = 1
                 # Perform this ack only based on certain acks
@@ -235,7 +249,7 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                                 create_packet_received_event(global_time, pkt, next_link, curr_host.get_ip(), next_dest.get_ip())
 
                             dst_time = global_time + TIMEOUT_VAL
-                            create_timeout_event(dst_time, pkt)
+                            create_timeout_event(dst_time, pkt, global_time)
                     else:
                         # Put the packet back into the host queue
                         curr_host.insert_packet(pkt)
@@ -269,9 +283,12 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
     #         assert acknowledged_packets[p_id] > 0
     if p_id not in acknowledged_packets:
         # print 'Creating timeout packet'
-        curr_host.set_threshold(curr_host.get_window_size() / 2.0)
-        curr_host.set_window_size(1)
-        print "window size 3: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
+        if FAST:
+            pass
+        else:
+            curr_host.set_threshold(curr_host.get_window_size() / 2.0)
+            curr_host.set_window_size(1)
+            print "window size 3: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
 
         curr_link = curr_host.get_link()
         next_hop = curr_link.get_link_endpoint(curr_host)
@@ -301,7 +318,7 @@ def process_timeout_event(event_top, global_time, hosts, dropped_packets, acknow
             #assert False
 
         dst_time = global_time + TIMEOUT_VAL
-        create_timeout_event(dst_time, p)
+        create_timeout_event(dst_time, p, global_time)
 
     print 'Timeout happened!!!!!'
     print 'Other'
