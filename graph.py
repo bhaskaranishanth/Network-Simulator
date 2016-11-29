@@ -14,12 +14,14 @@ def drop_packets(time, links):
         drop_packets_list.append([link_id, time, link.get_drop_packets()])
     return drop_packets_list
 
-def graph_window_size(window_size_list):
-    lines = []
-    x = [elem[0] for elem in window_size_list]
-    y = [elem[1] for elem in window_size_list]
-    line_up, = plt.plot(x, y, linewidth = 2.0)
-    lines.append(line_up)
+def graph_window_size(window_size_dict):
+    for key in window_size_dict:
+        window_size_list = window_size_dict[key]
+        lines = []
+        x = [elem[0] for elem in window_size_list]
+        y = [elem[1] for elem in window_size_list]
+        line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
+        lines.append(line_up)
 
     plt.ylabel("Window Size")
     plt.xlabel("Time")
@@ -78,11 +80,11 @@ def graph_pck_buf(points):
 
     lines = []
     for i in range(0, len(points[0]), 1):
-        x = [elem[0][1] for elem in points]
-        y = [elem[i][2] for elem in points]
-        if points[0][i][0] in ['L4']:
-            line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
-            lines.append(line_up)
+        x = [elem[0][1] for elem in points][0:len(points):500]
+        y = [elem[i][2] for elem in points][0:len(points):500]
+        # if points[0][i][0] in ['L4']:
+        line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
+        lines.append(line_up)
 
     plt.ylabel("Packets In Buffer")
     plt.xlabel("Time")

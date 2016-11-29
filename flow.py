@@ -2,7 +2,7 @@ from packet import *
 from math import ceil
 
 class Flow:
-    def __init__(self, flow_id, data_size, flow_src, flow_dest, flow_start):
+    def __init__(self, flow_id, data_size, flow_src, flow_dest, flow_start, is_fast):
         """
         Defines Flow class containing the flow ID, total amount of data 
         (data_size), source, destination, and start time of the flow
@@ -12,6 +12,7 @@ class Flow:
         self.flow_src = flow_src
         self.flow_dest = flow_dest
         self.flow_start = float(flow_start)
+        self.is_fast = int(is_fast) == 1
 
     
     """ ACCESSOR METHODS """
@@ -31,6 +32,9 @@ class Flow:
     def get_start(self):
         return self.flow_start
 
+    def get_tcp(self):
+        return self.is_fast
+
     
     """ MUTATOR METHODS """
 
@@ -48,6 +52,9 @@ class Flow:
 
     def set_start(self, start):
         self.flow_start = start
+
+    def set_tcp(self, is_fast):
+        self.is_fast = is_fast
 
     def gen_packets(self):
         """

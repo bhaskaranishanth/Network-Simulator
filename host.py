@@ -13,6 +13,10 @@ class Host:
         self.window_count = 0
         self.window_size = WINDOW_SIZE
         self.threshold = THRESHOLD
+        self.is_fast = None
+        self.flow_id = None
+        self.base_RTT = float('inf')
+        self.last_RTT = self.base_RTT
 
     
     """ ACCESSOR METHODS """
@@ -38,6 +42,20 @@ class Host:
     def get_threshold(self):
         return self.threshold
 
+    def get_tcp(self):
+        assert type(self.is_fast) == bool or self.is_fast == None
+        print type(self.is_fast)
+        return self.is_fast
+
+    def get_flow_id(self):
+        return self.flow_id
+
+    def get_base_RTT(self):
+        return self.base_RTT
+
+    def get_last_RTT(self):
+        return self.last_RTT
+
 
     """ MUTATOR METHODS """
 
@@ -56,6 +74,19 @@ class Host:
 
     def set_threshold(self, threshold):
         self.threshold = threshold
+
+    def set_tcp(self, is_fast):
+        assert type(is_fast) == bool
+        self.is_fast = is_fast
+
+    def set_flow_id(self, flow_id):
+        self.flow_id = flow_id
+
+    def set_base_RTT(self, base_RTT):
+        self.base_RTT = base_RTT
+
+    def set_last_RTT(self, last_RTT):
+        self.last_RTT = last_RTT
 
     def insert_packet(self, packet):
         self.q.put(packet)

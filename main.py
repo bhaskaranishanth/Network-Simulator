@@ -82,8 +82,8 @@ def process_input():
     flow_f.readline()
     flows = {}
     for line in flow_f:
-        flow_id, src, dst, data_amt, flow_start = line.strip().split('|')
-        flows[flow_id] = Flow(flow_id, data_amt, src, dst, flow_start)
+        flow_id, src, dst, data_amt, flow_start, is_fast = line.strip().split('|')
+        flows[flow_id] = Flow(flow_id, data_amt, src, dst, flow_start, is_fast)
 
     return hosts, routers, links, flows
 
@@ -91,11 +91,15 @@ def initialize_packets(flows, hosts):
     for key in flows:
         event_list = []
         count = 0
+        curr_host = hosts[flows[key].get_src()]
+        curr_host.set_tcp(flows[key].get_tcp())
+        curr_host.set_flow_id(key)
+
         for packet in flows[key].gen_packets():
             count += 1
-            hosts[flows[key].get_src()].insert_packet(packet)
+            curr_host.insert_packet(packet)
 
-            # if count == 1000:
+            # if count == 3500:
             #     break
 
 
@@ -153,13 +157,18 @@ if __name__ == '__main__':
     create_dynamic_routing_event(ROUTING_INTERVAL)
 
 
-
     global_time = 0
     acknowledged_packets = {}
     pck_graph = []
     dropped_packets = []
     pck_drop_graph = []
-    window_size_list = []
+    window_size_dict = {}
+
+    for host in hosts:
+        if hosts[host].get_flow_id() is not None:
+            window_size_dict[hosts[host].get_flow_id()] = []
+        if hosts[host].get_tcp():
+            create_update_window_event(host, PERIODIC_FAST_INTERVAL)
 
     counter = 0
 
@@ -179,13 +188,19 @@ if __name__ == '__main__':
         # Host or Router receives a packet
         if event_top.get_type() == PACKET_RECEIVED:
             process_packet_received_event(event_top, global_time, links, routers, 
-                hosts, dropped_packets, acknowledged_packets, window_size_list)
+                hosts, dropped_packets, acknowledged_packets, window_size_dict)
         elif event_top.get_type() == TIMEOUT_EVENT:
             process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
         elif event_top.get_type() == DYNAMIC_ROUTING:
             if eq.qsize() == 0:
                 break
+            elif eq.qsize() == 1:
+                t, event_top = eq.get()
+                if event_top.get_type() == UPDATE_WINDOW:
+                    break
+                else:
+                    eq.put(t, event_top)
             # create_dynamic_routing_event(event_top.get_initial_time() + ROUTING_INTERVAL)
             for r in routers:
                 routers[r].reset_weight_table()
@@ -204,6 +219,28 @@ if __name__ == '__main__':
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
 
+        elif event_top.get_type() == UPDATE_WINDOW:
+            if eq.qsize() == 0:
+                break
+            elif eq.qsize() == 1:
+                t, event_top = eq.get()
+                if event_top.get_type() == DYNAMIC_ROUTING:
+                    break
+                else:
+                    eq.put(t, event_top)
+            curr_host = hosts[event_top.get_src()]
+            if curr_host in window_size_dict:
+                w = curr_host.get_window_size()
+                curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
+                print "changing window size:", curr_host.get_window_size()
+                # if curr_host.get_ip() == 'S1':
+                print window_size_dict
+                print curr_host
+                print curr_host.get_flow_id()
+                window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+
+                create_update_window_event(host, global_time + PERIODIC_FAST_INTERVAL)
+
         else:
             assert False
 
@@ -219,12 +256,12 @@ if __name__ == '__main__':
     # print len(dropped_packets)
     # # print(pck_graph)
 
-    # print window_size_list
+    # print window_size_dict
     graph_pck_buf(pck_graph)
-    graph_window_size(window_size_list)
+    graph_window_size(window_size_dict)
 
     # graph_pck_buf(pck_graph)
-    # graph_window_size(window_size_list)
+    # graph_window_size(window_size_dict)
     # points = format_drop_to_rate(pck_drop_graph)
     # graph(points)
     # print(pck_drop_graph)

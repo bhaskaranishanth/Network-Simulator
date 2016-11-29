@@ -4,8 +4,9 @@ LINK_TO_ENDPOINT = "LINK_TO_ENDPOINT"
 PACKET_RECEIVED = "PACKET_RECEIVED"
 DYNAMIC_ROUTING = "DYNAMIC_ROUTING"
 ROUTING_PACKET_RECEIVED = "ROUTING_PACKET_RECEIVED"
+UPDATE_WINDOW = "UPDATE_WINDOW"
 
-type_events = [TIMEOUT_EVENT, LINK_TO_ENDPOINT, PACKET_RECEIVED, DYNAMIC_ROUTING, ROUTING_PACKET_RECEIVED]
+type_events = [TIMEOUT_EVENT, LINK_TO_ENDPOINT, PACKET_RECEIVED, DYNAMIC_ROUTING, ROUTING_PACKET_RECEIVED, UPDATE_WINDOW]
 
 
 class Event:
@@ -20,7 +21,7 @@ class Event:
     def __init__(self, event_type, initial_time, src, dest, data):
         self.check_type(event_type)
         assert type(src) == str or event_type == DYNAMIC_ROUTING
-        assert type(dest) == str or event_type == DYNAMIC_ROUTING
+        assert type(dest) == str or event_type == DYNAMIC_ROUTING or event_type == UPDATE_WINDOW
 
         self.type = event_type
         self.src = src
