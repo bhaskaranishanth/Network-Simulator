@@ -13,4 +13,4 @@ ALPHA = 15
 GAMMA = 0.5
 
 # If FAST = 1, use Fast TCP. Otherwise, TCP Reno. 
-FAST = 0
+FAST = 1

@@ -219,7 +219,7 @@ if __name__ == '__main__':
     # print len(dropped_packets)
     # # print(pck_graph)
 
-    print window_size_list
+    # print window_size_list
     graph_pck_buf(pck_graph)
     graph_window_size(window_size_list)
 

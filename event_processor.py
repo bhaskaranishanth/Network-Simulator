@@ -197,16 +197,8 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
         # Acknowledgment packet received
         if curr_packet.get_type() == ACK_PACKET:
             print 'Acknowledged this shit'
-            if curr_host.get_window_size() < curr_host.get_threshold():
-                curr_host.set_window_size(curr_host.get_window_size() + 1.0)
-                
-            else:
-                curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
-            print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
-            window_size_list.append((global_time, curr_host.get_window_size()))
 
             if FAST:
-
                 RTT = global_time - curr_packet.get_init_time()
                 base_RTT = 0.1
                 w = curr_host.get_window_size()
@@ -216,8 +208,16 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                     print "changing window size: gamma"
                 curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (base_RTT / RTT * w + ALPHA)))
                 print "changing fast window size:", curr_host.get_window_size()
-                if curr_host == 'S1':
-                    window_size_list.append((global_time, curr_host.get_window_size()))
+                # if curr_host.get_ip() == 'S1':
+                window_size_list.append((global_time, curr_host.get_window_size()))
+            else:
+                if curr_host.get_window_size() < curr_host.get_threshold():
+                    curr_host.set_window_size(curr_host.get_window_size() + 1.0)
+                
+                else:
+                    curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
+                print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
+                window_size_list.append((global_time, curr_host.get_window_size()))
 
             # Insert acknowledgement into dictionary
             if curr_packet.packet_id in acknowledged_packets:

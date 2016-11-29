@@ -77,10 +77,10 @@ def graph_pck_buf(points):
     #         y_coord[i][j] = points[j][i][2]
 
     lines = []
-    for i in range(0, len(points[0]), 2):
+    for i in range(0, len(points[0]), 1):
         x = [elem[0][1] for elem in points]
         y = [elem[i][2] for elem in points]
-        if points[0][i][0] in ['L2', 'L1']:
+        if points[0][i][0] in ['L4']:
             line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
             lines.append(line_up)
 
