@@ -28,7 +28,6 @@ class Link:
         self.src = None
         self.dst = None
 
-
     """ ACCESSOR METHODS """
 
 
@@ -69,9 +68,6 @@ class Link:
         Number of packets in window.
         '''
         return self.num_packets
-
-    def get_free_time(self):
-        return self.next_free_time
 
     
     """ MUTATOR METHODS """
