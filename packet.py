@@ -36,7 +36,8 @@ class Packet:
         self.src = src
         self.dest = dest
         self.curr_loc = curr_loc
-        self.packet_id = id(self)
+        # self.packet_id = id(self)
+        self.packet_id = None
         self.init_time = init_time
 
     def set_capacity(self):
@@ -77,6 +78,9 @@ class Packet:
     def get_init_time(self):
         return self.init_time
 
+    def get_packet_id(self):
+        return self.packet_id
+
 
     """ ACCESSOR METHODS """
 
@@ -98,11 +102,14 @@ class Packet:
 
     def set_curr_loc(self, curr_loc):
         assert type(curr_loc) == str
-        # assert self.curr_loc == None
         self.curr_loc = curr_loc
 
     def set_init_time(self, init_time):
         self.init_time = init_time
+
+    def set_packet_id(self, id):
+        assert type(id) == int
+        self.packet_id = id
 
     """ PRINT METHODS """
     def __str__(self):

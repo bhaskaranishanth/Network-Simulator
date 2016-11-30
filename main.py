@@ -97,10 +97,11 @@ def initialize_packets(flows, hosts):
 
         for packet in flows[key].gen_packets():
             count += 1
+            packet.set_packet_id(count)
             curr_host.insert_packet(packet)
 
-            # if count == 3500:
-            #     break
+            if count == 1000:
+                break
 
 def initialize_flow_RTT(hosts):
     '''

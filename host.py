@@ -19,6 +19,15 @@ class Host:
         self.last_RTT = self.base_RTT
         self.bytes_received = 0
 
+        # Store the received and missing packet ids
+        # Figure out a way to deal with multiple flows
+        self.pkt_id_dict = {}
+        self.recv_pkt_ids = []
+        self.miss_pkt_ids = []
+        self.last_recv_pkt_id = None
+        self.last_miss_pkt_id = None
+
+
     
     """ ACCESSOR METHODS """
     
@@ -60,6 +69,21 @@ class Host:
     def get_bytes_received(self):
         return self.bytes_received
 
+    def get_queue(self):
+        return self.q
+
+    def get_received_pkt_ids(self):
+        return self.recv_pkt_ids
+
+    def get_missing_pkt_ids(self):
+        return self.miss_pkt_ids
+
+    def get_last_received_pkt_id(self):
+        return self.last_recv_pkt_id
+
+    def get_last_missing_pkt_id(self):
+        return self.last_miss_pkt_id
+
 
     """ MUTATOR METHODS """
 
@@ -98,6 +122,35 @@ class Host:
     def insert_packet(self, packet):
         self.q.put(packet)
 
+    def insert_recv_pkt(self, packet):
+        self.recv_pkt_ids.append(packet.get_packet_id())
+
+    def insert_miss_pkt(self, packet):
+        self.miss_pkt_ids.append(packet.get_packet_id())
+
+    def update_last_recv_pkt(self):
+        """
+        Function that finds the next missing
+        packet id and sets the last packet received
+        to be that id value minus 1.
+        """
+        curr_val = self.last_recv_pkt_id
+        # print "cur val: ", curr_val
+        # print "list: ", self.recv_pkt_ids
+        while curr_val in self.recv_pkt_ids:
+            curr_val += 1
+        #     print "ya"
+        # print "new id: ", self.last_recv_pkt_id
+        self.last_recv_pkt_id = curr_val - 1
+
+    def set_last_received_pkt_id(self, id):
+        self.last_recv_pkt_id = id
+
+    def set_last_missing_pkt_id(self, id):
+        self.last_miss_pkt_id = id
+
+
+
     def remove_packet(self):
         if self.q.empty():
             return None
@@ -106,6 +159,10 @@ class Host:
 
     
     """ PRINT METHODS """
+
+    def print_queue(self):
+        for elem in list(self.q.queue):
+            print elem
 
     def __str__(self):
         print 'Host IP: ' + self.ip

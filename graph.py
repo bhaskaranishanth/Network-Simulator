@@ -22,6 +22,38 @@ def graph_window_size(window_size_dict):
         y = [elem[1] for elem in window_size_list]
         line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
         lines.append(line_up)
+        # interval = 0
+        # step = 5
+        # start = 100
+        # i = 100
+        # new_x = [elem[0] for elem in window_size_list[:i]]
+        # new_y = [elem[1] for elem in window_size_list[:i]]
+
+        # while i < len(x):
+        #     new_sum_x = 0
+        #     new_sum_y = 0
+        #     while i < len(x) and interval < x[i] and x[i] < interval + step:
+        #         new_sum_x += x[i]
+        #         new_sum_y += y[i]
+        #         i += 1
+        #     if i >= len(x):
+        #         break
+
+        #     new_avg_x = 0
+        #     new_avg_y = 0
+        #     if start - i == 0:
+        #         new_avg_x = new_sum_x
+        #         new_avg_y = new_sum_y
+        #     else:
+        #         new_avg_x = new_sum_x / (i - start)
+        #         new_avg_y = new_sum_y / (i - start)
+        #     start = i
+        #     i += 1
+        #     interval += step
+        #     new_x.append(new_avg_x)
+        #     new_y.append(new_avg_y)
+
+        # line_up, = plt.plot(new_x, new_y, linewidth = 2.0)
 
     plt.ylabel("Window Size")
     plt.xlabel("Time")
@@ -114,6 +146,7 @@ def graph_pck_buf(points):
     for i in range(0, len(points[0]), 1):
         x = [elem[0][1] for elem in points][0:len(points):500]
         y = [elem[i][2] for elem in points][0:len(points):500]
+
         # if points[0][i][0] in ['L4']:
         line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
         lines.append(line_up)
