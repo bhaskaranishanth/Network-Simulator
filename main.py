@@ -102,6 +102,23 @@ def initialize_packets(flows, hosts):
             # if count == 3500:
             #     break
 
+def initialize_flow_RTT(hosts):
+    '''
+    Sets each flows RTT to be infinity
+    '''
+    base_rtt_table = get_base_RTT(hosts)
+    print base_rtt_table
+    for host in hosts:
+        # Initialize the baseRTT for only TCP Fast flows
+        # if hosts[host].get_tcp():
+            # f = flows[hosts[host].get_flow_id()]
+            # baseRTT = base_rtt_table[(hosts[f.get_src()], hosts[f.get_dest()])]
+        hosts[host].set_base_RTT(float('inf'))
+
+def store_packet_delay(packet_delay_dict, hosts, global_time):
+    for host in hosts:
+        if hosts[host].get_flow_id() is not None:
+            packet_delay_dict[hosts[host].get_flow_id()].append((global_time, hosts[host].get_last_RTT()))
 
 if __name__ == '__main__':
     # Process input
@@ -115,7 +132,6 @@ if __name__ == '__main__':
     # Create routing table
     d = Djikstra()
     d.update_routing_table(routers.values())
-    base_rtt_table = get_base_RTT(hosts)
 
     initialize_packets(flows, hosts)
 
@@ -156,32 +172,36 @@ if __name__ == '__main__':
 
     create_dynamic_routing_event(ROUTING_INTERVAL)
 
-
     global_time = 0
     acknowledged_packets = {}
     pck_graph = []
     dropped_packets = []
     pck_drop_graph = []
     window_size_dict = {}
+    packet_delay_dict = {}
 
+    initialize_flow_RTT(hosts)
     for host in hosts:
         if hosts[host].get_flow_id() is not None:
             window_size_dict[hosts[host].get_flow_id()] = []
+            packet_delay_dict[hosts[host].get_flow_id()] = []
         if hosts[host].get_tcp():
-            create_update_window_event(host, PERIODIC_FAST_INTERVAL)
-
-    counter = 0
+            create_update_window_event(hosts[host], PERIODIC_FAST_INTERVAL)
+    
 
     # Continuously pull events from the priority queue
     while eq.qsize() != 0:
         print 'Queue size: ', eq.qsize()
         print '-' * 80
         t, event_top = eq.get()
-        pck_graph.append(pck_tot_buffers(t, links))
-        pck_drop_graph.append(drop_packets(t, links))
         assert t != None
         global_time = t
+
+
+        pck_graph.append(pck_tot_buffers(t, links))
+        pck_drop_graph.append(drop_packets(t, links))
         # print t, event_top
+        store_packet_delay(packet_delay_dict, hosts, global_time)
 
         assert event_top.get_type() != LINK_TO_ENDPOINT
 
@@ -220,26 +240,28 @@ if __name__ == '__main__':
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
 
         elif event_top.get_type() == UPDATE_WINDOW:
-            if eq.qsize() == 0:
+            # Hackish solution to stop the program
+            if eq.qsize() < 5:
                 break
-            elif eq.qsize() == 1:
-                t, event_top = eq.get()
-                if event_top.get_type() == DYNAMIC_ROUTING:
-                    break
-                else:
-                    eq.put(t, event_top)
-            curr_host = hosts[event_top.get_src()]
-            if curr_host in window_size_dict:
-                w = curr_host.get_window_size()
-                curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
-                print "changing window size:", curr_host.get_window_size()
-                # if curr_host.get_ip() == 'S1':
-                print window_size_dict
-                print curr_host
-                print curr_host.get_flow_id()
-                window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
 
-                create_update_window_event(host, global_time + PERIODIC_FAST_INTERVAL)
+            # if eq.qsize() == 0:
+            #     break
+            # elif eq.qsize() == 1:
+            #     t, event_top = eq.get()
+            #     if event_top.get_type() == DYNAMIC_ROUTING:
+            #         break
+            #     else:
+            #         eq.put(t, event_top)
+            curr_host = hosts[event_top.get_src()]
+            assert curr_host.is_fast
+            # Update window size 
+            # if curr_host in window_size_dict:
+            w = curr_host.get_window_size()
+            curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
+            print "changing window size:", curr_host.get_window_size()
+            window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+
+            create_update_window_event(curr_host, global_time + PERIODIC_FAST_INTERVAL)
 
         else:
             assert False
@@ -259,6 +281,7 @@ if __name__ == '__main__':
     # print window_size_dict
     graph_pck_buf(pck_graph)
     graph_window_size(window_size_dict)
+    graph_packet_delay(packet_delay_dict)
 
     # graph_pck_buf(pck_graph)
     # graph_window_size(window_size_dict)

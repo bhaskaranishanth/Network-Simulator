@@ -9,6 +9,7 @@ class Flow:
         """
         self.flow_id = flow_id
         self.data_size = float(data_size)
+        assert type(flow_src) == str and type(flow_dest) == str
         self.flow_src = flow_src
         self.flow_dest = flow_dest
         self.flow_start = float(flow_start)

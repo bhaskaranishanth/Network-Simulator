@@ -29,6 +29,21 @@ def graph_window_size(window_size_dict):
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
+def graph_packet_delay(packet_delay_dict):
+    for key in packet_delay_dict:
+        packet_delay_list = packet_delay_dict[key]
+        lines = []
+        x = [elem[0] for elem in packet_delay_list]
+        y = [elem[1] for elem in packet_delay_list]
+        line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
+        lines.append(line_up)
+
+    plt.ylabel("Packet delay")
+    plt.xlabel("Time")
+    plt.legend()
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
+
 def graph_pck_drop_rate(drop_packets):
     max_time = int(drop_packets[len(drop_packets) - 1][0][1]) + 1
     drop_rate_arr = [[0 for y in range(max_time)] for z in range(len(drop_packets[0]))]
