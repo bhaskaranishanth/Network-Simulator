@@ -44,6 +44,23 @@ def graph_packet_delay(packet_delay_dict):
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
+def graph_flow_rate(flow_rate_dict):
+    for key in flow_rate_dict:
+        flow_rate_list = flow_rate_dict[key]
+        lines = []
+        x = [elem[0] for elem in flow_rate_list]
+        y = [elem[1] for elem in flow_rate_list]
+        line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
+        lines.append(line_up)
+
+    plt.ylabel("Flow rate")
+    plt.xlabel("Time")
+    plt.legend()
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
+
+
+
 def graph_pck_drop_rate(drop_packets):
     max_time = int(drop_packets[len(drop_packets) - 1][0][1]) + 1
     drop_rate_arr = [[0 for y in range(max_time)] for z in range(len(drop_packets[0]))]

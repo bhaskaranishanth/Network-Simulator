@@ -104,21 +104,32 @@ def initialize_packets(flows, hosts):
 
 def initialize_flow_RTT(hosts):
     '''
-    Sets each flows RTT to be infinity
+    Sets each hosts base RTT to be infinity
     '''
     base_rtt_table = get_base_RTT(hosts)
     print base_rtt_table
     for host in hosts:
-        # Initialize the baseRTT for only TCP Fast flows
-        # if hosts[host].get_tcp():
-            # f = flows[hosts[host].get_flow_id()]
-            # baseRTT = base_rtt_table[(hosts[f.get_src()], hosts[f.get_dest()])]
         hosts[host].set_base_RTT(float('inf'))
 
 def store_packet_delay(packet_delay_dict, hosts, global_time):
     for host in hosts:
         if hosts[host].get_flow_id() is not None:
             packet_delay_dict[hosts[host].get_flow_id()].append((global_time, hosts[host].get_last_RTT()))
+
+def store_flow_rate(flow_rate_dict, hosts, global_time):
+    for host in hosts:
+        if hosts[host].get_flow_id() is not None:
+            prev = 0
+            if len(flow_rate_dict[hosts[host].get_flow_id()]) != 0:
+                prev = flows[hosts[host].get_flow_id()].prev
+
+            diff = ((hosts[host].get_bytes_received() - prev) * 8.0 / 10**6) / float(GRAPH_EVENT_INTERVAL)
+            # diff = ((hosts[host].get_bytes_received() - prev) / (10 ** 6 / 8.0)) / global_time
+            print 'Diff: ', global_time, diff, hosts[host].get_bytes_received(), prev
+            flow_rate_dict[hosts[host].get_flow_id()].append((global_time, diff))
+            flows[hosts[host].get_flow_id()].prev = hosts[host].get_bytes_received()
+
+    # print 'Diff '
 
 if __name__ == '__main__':
     # Process input
@@ -171,6 +182,7 @@ if __name__ == '__main__':
                 break
 
     create_dynamic_routing_event(ROUTING_INTERVAL)
+    create_graph_event(GRAPH_EVENT_INTERVAL)
 
     global_time = 0
     acknowledged_packets = {}
@@ -179,12 +191,15 @@ if __name__ == '__main__':
     pck_drop_graph = []
     window_size_dict = {}
     packet_delay_dict = {}
+    flow_rate_dict = {}
+
 
     initialize_flow_RTT(hosts)
     for host in hosts:
         if hosts[host].get_flow_id() is not None:
             window_size_dict[hosts[host].get_flow_id()] = []
             packet_delay_dict[hosts[host].get_flow_id()] = []
+            flow_rate_dict[hosts[host].get_flow_id()] = []
         if hosts[host].get_tcp():
             create_update_window_event(hosts[host], PERIODIC_FAST_INTERVAL)
     
@@ -193,7 +208,9 @@ if __name__ == '__main__':
     while eq.qsize() != 0:
         print 'Queue size: ', eq.qsize()
         print '-' * 80
-        t, event_top = eq.get()
+        a= eq.get()
+        print 'This is a: ', a
+        t, event_top = a
         assert t != None
         global_time = t
 
@@ -202,6 +219,7 @@ if __name__ == '__main__':
         pck_drop_graph.append(drop_packets(t, links))
         # print t, event_top
         store_packet_delay(packet_delay_dict, hosts, global_time)
+        # store_flow_rate(flow_rate_dict, hosts, global_time)
 
         assert event_top.get_type() != LINK_TO_ENDPOINT
 
@@ -238,6 +256,13 @@ if __name__ == '__main__':
 
         elif event_top.get_type() == ROUTING_PACKET_RECEIVED:
             process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
+        elif event_top.get_type() == GRAPH_EVENT:
+            # Hackish solution to stop the program
+            if eq.qsize() < 5:
+                break
+
+            store_flow_rate(flow_rate_dict, hosts, global_time)
+            create_graph_event(global_time + GRAPH_EVENT_INTERVAL)
 
         elif event_top.get_type() == UPDATE_WINDOW:
             # Hackish solution to stop the program
@@ -279,9 +304,11 @@ if __name__ == '__main__':
     # # print(pck_graph)
 
     # print window_size_dict
-    graph_pck_buf(pck_graph)
+    # print flow_rate_dict
+    graph_flow_rate(flow_rate_dict)
+    # graph_pck_buf(pck_graph)
     graph_window_size(window_size_dict)
-    graph_packet_delay(packet_delay_dict)
+    # graph_packet_delay(packet_delay_dict)
 
     # graph_pck_buf(pck_graph)
     # graph_window_size(window_size_dict)

@@ -17,6 +17,7 @@ class Host:
         self.flow_id = None
         self.base_RTT = float('inf')
         self.last_RTT = self.base_RTT
+        self.bytes_received = 0
 
     
     """ ACCESSOR METHODS """
@@ -56,6 +57,9 @@ class Host:
     def get_last_RTT(self):
         return self.last_RTT
 
+    def get_bytes_received(self):
+        return self.bytes_received
+
 
     """ MUTATOR METHODS """
 
@@ -87,6 +91,9 @@ class Host:
 
     def set_last_RTT(self, last_RTT):
         self.last_RTT = last_RTT
+
+    def set_bytes_received(self, packet_size):
+        self.bytes_received = packet_size
 
     def insert_packet(self, packet):
         self.q.put(packet)

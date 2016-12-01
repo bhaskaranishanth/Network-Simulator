@@ -41,6 +41,11 @@ def create_dynamic_routing_event(routing_time):
     eq.put((new_event.get_initial_time(), new_event))
     return new_event
 
+def create_graph_event(time):
+    new_event = Event(GRAPH_EVENT, time, None, None, None)
+    eq.put((new_event.get_initial_time(), new_event))
+    return new_event
+
 
 def get_link_from_event(event_top, links):
     """
@@ -229,6 +234,7 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
 
             # Insert acknowledgement into dictionary
+            curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
             if curr_packet.packet_id in acknowledged_packets:
                 acknowledged_packets[curr_packet.packet_id] += 1
                 if not curr_host.get_tcp():
@@ -244,6 +250,7 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                 acknowledged_packets[curr_packet.packet_id] = 1
                 # Perform this ack only based on certain acks
                 curr_host.set_window_count(curr_host.get_window_count() - 1)
+                # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
 
             # Convert packet from host queue into event and insert into buffer
             # if curr_host.get_window_count() < curr_host.get_window_size():
