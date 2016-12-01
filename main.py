@@ -210,7 +210,7 @@ if __name__ == '__main__':
         print 'Queue size: ', eq.qsize()
         print '-' * 80
         a= eq.get()
-        print 'This is a: ', a
+        print 'exp_packe This is a: ', a
         t, event_top = a
         assert t != None
         global_time = t
@@ -239,7 +239,7 @@ if __name__ == '__main__':
                 if event_top.get_type() == UPDATE_WINDOW:
                     break
                 else:
-                    eq.put(t, event_top)
+                    eq.put((t, event_top))
             # create_dynamic_routing_event(event_top.get_initial_time() + ROUTING_INTERVAL)
             for r in routers:
                 routers[r].reset_weight_table()

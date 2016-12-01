@@ -275,10 +275,9 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
 
                         if curr_link.insert_into_buffer(p, p.get_capacity()):
                             print "exp_packe inserted into buffer"
-                            if curr_link.get_free_time() <= global_time:
-                                if len(curr_link.packet_queue) == 1:
-                                    assert p.get_curr_loc() == next_hop.get_ip()
-                                    create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop.get_ip())
+                            if len(curr_link.packet_queue) == 1:
+                                assert p.get_curr_loc() == next_hop.get_ip()
+                                create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop.get_ip())
                         else:
                             dropped_packets.append(p)
                             curr_link.increment_drop_packets()
