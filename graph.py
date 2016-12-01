@@ -144,6 +144,7 @@ def graph_pck_buf(points):
 
     lines = []
     for i in range(0, len(points[0]), 1):
+
         x = [elem[0][1] for elem in points][0:len(points):500]
         y = [elem[i][2] for elem in points][0:len(points):500]
 

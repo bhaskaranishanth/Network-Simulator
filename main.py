@@ -100,7 +100,7 @@ def initialize_packets(flows, hosts):
             packet.set_packet_id(count)
             curr_host.insert_packet(packet)
 
-            if count == 1000:
+            if count == 5000:
                 break
 
 def initialize_flow_RTT(hosts):

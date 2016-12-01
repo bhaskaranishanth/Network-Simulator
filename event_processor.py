@@ -53,8 +53,6 @@ def get_link_from_event(event_top, links):
     determines which link is being used.
     """
     curr_link = None
-    # print "exp_packet_id: ", event_top.get_src()
-    # print "exp_packet_id: ", event_top.get_dest()
     for l in links:
         endpoints_id = (links[l].get_endpoints()[0].get_ip(), links[l].get_endpoints()[1].get_ip())
         if event_top.get_src() in endpoints_id and event_top.get_dest() in endpoints_id:
@@ -239,12 +237,18 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
 
             # Insert acknowledgement into dictionary
+
             curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
-            if curr_packet.packet_id in acknowledged_packets:
-                acknowledged_packets[curr_packet.packet_id] += 1
+            if curr_packet.get_packet_id() in acknowledged_packets:
+                acknowledged_packets[curr_packet.get_packet_id()] += 1
                 if not curr_host.get_tcp():
-                    if acknowledged_packets[curr_packet.packet_id] > 3:
-                        acknowledged_packets[curr_packet.packet_id] -= 3
+                    print "exp_packe Location 1: ", acknowledged_packets[curr_packet.get_packet_id()], " and id: ", curr_packet.get_packet_id()
+                    if acknowledged_packets[curr_packet.get_packet_id()] > 3:
+                        acknowledged_packets[curr_packet.get_packet_id()] = -3
+
+                        # Change window and threshold to w/2 
+                        print "exp_packe before: ", curr_host.get_window_size()
+
                         curr_host.set_window_size(curr_host.get_window_size() / 2.0)
                         print "exp_packe after: ", curr_host.get_window_size()
                         curr_host.set_threshold(curr_host.get_window_size())
@@ -255,19 +259,22 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
 
                         print "threshold:", curr_host.get_threshold()
                         # print "exp_packe: ", next_dest
+                        # print 'exp_packe ', curr_packet.get_packet_id()
+                        # print "exp_packe ", acknowledged_packets
+                        # exit(1)
 
 
                         # Retransmit same packet
                         curr_link = curr_host.get_link()
-                        # assert(curr_host.get_ip() == "H1")
-                        # assert(curr_packet.get_dest() == "H1")
-                        # assert(curr_packet.get_src() == "H2")
                         next_hop = curr_link.get_link_endpoint(curr_host)
                         p = Packet(MESSAGE_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), next_hop.get_ip(), global_time)
-                        p.set_packet_id(curr_packet.get_packet_id())
+
+                        # Send the packet id greater than the previous packet
+                        p.set_packet_id(curr_packet.get_packet_id() + 1)
                         dropped_packets.append(p)
 
                         if curr_link.insert_into_buffer(p, p.get_capacity()):
+                            print "exp_packe inserted into buffer"
                             if curr_link.get_free_time() <= global_time:
                                 if len(curr_link.packet_queue) == 1:
                                     assert p.get_curr_loc() == next_hop.get_ip()
@@ -276,18 +283,17 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                             dropped_packets.append(p)
                             curr_link.increment_drop_packets()
 
-
-                        # create_packet_received_event(global_time, curr_packet, curr_host.get_link(), curr_packet.get_dest(), next_dest.get_ip())
-                        print "Same Packet Transmitted: ", curr_packet
-                        # print curr_host.get_received_pkt_ids()
-                        # print "exp_packet_id exited"
-                        print "exp_packe: ", next_dest
                         # exit(1)
+                    # Receiving an extra ack packet should not do anything besides
+                    # increasing the window size of the host
+                    elif acknowledged_packets[curr_packet.get_packet_id()] < -1:
+                        acknowledged_packets[curr_packet.get_packet_id()] = -3
             else:
                 # Store ack packet id for the first time
                 acknowledged_packets[curr_packet.get_packet_id()] = 1
                 curr_host.set_window_count(curr_host.get_window_count() - 1)
                 # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
+                print "exp_packe t waht, "
 
                 # exit(1)
 
@@ -324,14 +330,12 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
 
             last_recv_pkt = curr_host.get_last_received_pkt_id()
             exp_packet_id = 1 if last_recv_pkt == None else (last_recv_pkt + 1)
-            print "new pkt: ", p
+            # print "new pkt: ", p
             print "last_recv_pkt: ", last_recv_pkt
             print "exp_packet_id: ", exp_packet_id, " curr_packet_id: ", curr_packet.get_packet_id()
 
             # Update the received packets and missing packets list in the host
             if exp_packet_id != curr_packet.get_packet_id():
-                # If not in the list, then 
-                # print curr_host.get_received_pkt_ids()
                 # Takes care of packets sent by timeouts
                 if curr_packet.get_packet_id() not in curr_host.get_received_pkt_ids():
                     assert(exp_packet_id < curr_packet.get_packet_id())
@@ -339,13 +343,20 @@ def process_packet_received_event(event_top, global_time, links, routers, hosts,
                     print "Expected id: ", exp_packet_id
                     print "Current id: ", curr_packet.get_packet_id()
                     p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
-                    p.set_packet_id(exp_packet_id)
+                    p.set_packet_id(exp_packet_id - 1)
                     print p
                     # Insert ack packet into the buffer
                     insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
                     # exit(1)
                 # exit(1)
             else:
+                # Create acknowlegment packet with same packet id as the original packet
+                # p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
+                # p.set_packet_id(curr_packet.get_packet_id())
+
+                # # Insert ack packet into the buffer
+                # insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
+
                 # Add it to the received packet list
                 curr_host.insert_recv_pkt(curr_packet)
                 # Set the last packed received to be the packet id we added
