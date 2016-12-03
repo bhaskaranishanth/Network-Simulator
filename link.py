@@ -81,22 +81,22 @@ class Link:
         self.src = src
         self.dst = dst
 
-    def insert_into_buffer(self, packet, packet_size):
+    def insert_into_buffer(self, packet):
         """
         Inserts the packet into the link's buffer and return
         a boolean indicating success or failure.
         """
         print 'insert_into_buffer....'
         # print 'capacity: ', self.capacity
-        # print 'packet size: ', packet_size
+        # print 'packet size: ', packet.get_capacity()
         # print 'Buffer: ', self.buf
-        # print type(self.capacity), type(packet_size), type(self.buf)
-        # print self.capacity + packet_size > self.buf
+        # print type(self.capacity), type(packet.get_capacity()), type(self.buf)
+        # print self.capacity + packet.get_capacity() > self.buf
         print self.link_id
-        if self.capacity + packet_size > self.buf:
+        if self.capacity + packet.get_capacity() > self.buf:
             return False
         else:
-            self.capacity += packet_size
+            self.capacity += packet.get_capacity()
             self.num_packets += 1
             self.packet_queue.append(packet)
             return True

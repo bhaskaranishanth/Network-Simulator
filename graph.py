@@ -148,9 +148,9 @@ def graph_pck_buf(points):
         x = [elem[0][1] for elem in points][0:len(points):500]
         y = [elem[i][2] for elem in points][0:len(points):500]
 
-        # if points[0][i][0] in ['L4']:
-        line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
-        lines.append(line_up)
+        if points[0][i][0] in ['L2', 'L1', 'L3']:
+            line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
+            lines.append(line_up)
 
     plt.ylabel("Packets In Buffer")
     plt.xlabel("Time")

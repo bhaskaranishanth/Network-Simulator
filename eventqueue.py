@@ -1,6 +1,6 @@
-from Queue import PriorityQueue
+# from Queue import PriorityQueue
 
-eq = PriorityQueue(maxsize=0)
+# eq = PriorityQueue(maxsize=0)
 
 # Use Python's Priority Queue for the event queue
 #
