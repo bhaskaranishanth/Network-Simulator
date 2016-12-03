@@ -46,6 +46,8 @@ class EventProcessor:
         if next_link.insert_into_buffer(curr_packet):
             if len(next_link.packet_queue) == 1:
                 print 'Creating received event from top element of queue'
+                next_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
+
                 self.ec.create_packet_received_event(global_time, curr_packet, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
         else:
             dropped_packets.append(curr_packet)
@@ -113,8 +115,8 @@ class EventProcessor:
         print '*' * 40
         curr_link = self.get_link_from_event(event_top, links)
         curr_packet = event_top.get_data()
-        curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
-        print curr_packet
+        # curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
+        # print curr_packet
 
         self.ec.create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
 
@@ -161,6 +163,8 @@ class EventProcessor:
                     # # window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
                     # curr_host.set_last_RTT(RTT)
                 if not curr_host.get_tcp():
+                    print "performing Reno"
+                    exit(1)
                     if curr_host.get_window_size() < curr_host.get_threshold():
                         curr_host.set_window_size(curr_host.get_window_size() + 1.0)
                     else:
@@ -175,6 +179,8 @@ class EventProcessor:
                 if curr_packet.get_packet_id() in acknowledged_packets:
                     acknowledged_packets[curr_packet.get_packet_id()] += 1
                     if not curr_host.get_tcp():
+                        print "performing Reno2"
+                        exit(1)
                         print "exp_packe Location 1: ", acknowledged_packets[curr_packet.get_packet_id()], " and id: ", curr_packet.get_packet_id()
                         if acknowledged_packets[curr_packet.get_packet_id()] > 3:
                             acknowledged_packets[curr_packet.get_packet_id()] = -3
@@ -210,6 +216,8 @@ class EventProcessor:
                                 print "exp_packe inserted into buffer"
                                 if len(curr_link.packet_queue) == 1:
                                     assert p.get_curr_loc() == next_hop.get_ip()
+                                    curr_link.remove_from_buffer(p, p.get_capacity())
+
                                     self.ec.create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop.get_ip())
                             else:
                                 dropped_packets.append(p)
@@ -241,6 +249,8 @@ class EventProcessor:
                         if next_link.insert_into_buffer(pkt):
                             curr_host.set_window_count(curr_host.get_window_count()+1)
                             if len(next_link.packet_queue) == 1:
+                                next_link.remove_from_buffer(pkt, pkt.get_capacity())
+
                                 self.ec.create_packet_received_event(global_time, pkt, next_link, curr_host.get_ip(), next_dest.get_ip())
 
                             dst_time = global_time + TIMEOUT_VAL

@@ -71,17 +71,20 @@ class NetworkSystem:
         for _, h in self.hosts.iteritems():
             link = h.get_link()
             for i, p in enumerate(link.packet_queue):
-                if i == 0:
-                    # Create the first packet received event
-                    # TODO: possibly remove the packet from the buffer?
-                    curr_src = h
-                    next_dest = link.get_link_endpoint(h)
-                    self.ec.create_packet_received_event(p.get_init_time(), 
-                        p, link, curr_src.get_ip(), next_dest.get_ip())
-
                 # Creates timeout event
                 self.ec.create_timeout_event(TIMEOUT_VAL + p.get_init_time(),
                     p, p.get_init_time())
+                
+            if len(link.packet_queue) > 0:
+                # Create the first packet received event
+                # TODO: possibly remove the packet from the buffer?
+                p = link.packet_queue[0]
+                curr_src = h
+                next_dest = link.get_link_endpoint(h)
+                link.remove_from_buffer(p, p.get_capacity())
+                self.ec.create_packet_received_event(p.get_init_time(), 
+                    p, link, curr_src.get_ip(), next_dest.get_ip())
+
 
 
     # def create_packet_received_event(self, global_time, pkt, link, src, dest):

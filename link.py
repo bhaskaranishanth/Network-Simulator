@@ -10,10 +10,10 @@ class Link:
         self.link_id = link_id
         # Buffer size given in KB
         self.buf = float(buf) * 10 ** 3
-        # Prop time given in Mbps
-        self.prop_time = float(trans_time) * 10 ** (-3)
-        # Trans time given in ms
-        self.trans_time = float(prop_time) * (10 ** 6) / 8
+        # Trans time given in Mbps
+        self.trans_time = float(trans_time) * (10 ** 6) / 8
+        # Prop time given in ms
+        self.prop_time = float(prop_time) * 10 ** (-3)
         self.congestion = congestion
         self.direction = direction
 
@@ -116,14 +116,16 @@ class Link:
         # print 'capacity: ', self.capacity
         # print 'packet size: ', packet_size
         # print 'Buffer: ', self.buf
-        print self.link_id
+        print "removing: link ID", self.link_id
+        print "removing from buffer: capacity", self.capacity
+        print "removing from buffer: packet size", packet_size
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
         self.num_packets -= 1
         popped_pkt = self.packet_queue.popleft()
 
-        assert popped_pkt == packet
+        # assert popped_pkt == packet
         assert self.num_packets >= 0
 
     def update_next_free_time(self, free_time):

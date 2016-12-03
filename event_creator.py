@@ -18,6 +18,10 @@ class EventCreator:
             global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
             src, dest, pkt)
         self.eq.put((new_event.get_initial_time(), new_event))
+
+        # link.remove_from_buffer(pkt, pkt.get_capacity())
+        print pkt
+
         return new_event
 
     def create_routing_packet_received_event(self, global_time, pkt, link, src, dest):
@@ -84,6 +88,8 @@ class EventCreator:
                 next_dest = next_packet.get_curr_loc()
                 curr_src = curr_link.get_link_endpoint(curr_entity[next_packet.get_curr_loc()]).get_ip()
 
+                curr_link.remove_from_buffer(next_packet, next_packet.get_capacity())
+
                 # Create new event with the same packet
                 if next_dest == processed_packet_dest_loc:
                     self.create_packet_received_event(global_time - curr_link.get_prop_time(), next_packet, curr_link, curr_src, next_dest)
@@ -96,3 +102,5 @@ class EventCreator:
         assert curr_host.is_fast
         update_window_event = Event(UPDATE_WINDOW, time, curr_host.get_ip(), None, None)
         self.eq.put((update_window_event.get_initial_time(), update_window_event))
+
+

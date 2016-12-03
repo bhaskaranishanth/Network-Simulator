@@ -63,7 +63,7 @@ if __name__ == '__main__':
     ec = network.get_event_creator()
     ep = network.get_event_processor()
 
-    ec.create_dynamic_routing_event(ROUTING_INTERVAL)
+    # ec.create_dynamic_routing_event(ROUTING_INTERVAL)
     ec.create_graph_event(GRAPH_EVENT_INTERVAL)
 
     global_time = 0
@@ -191,10 +191,10 @@ if __name__ == '__main__':
 
     # # print window_size_dict
     # # print flow_rate_dict
-    # graph_flow_rate(flow_rate_dict)
+    graph_flow_rate(flow_rate_dict)
     # graph_pck_buf(pck_graph)
-    # graph_window_size(window_size_dict)
-    # graph_packet_delay(packet_delay_dict)
+    graph_window_size(window_size_dict)
+    graph_packet_delay(packet_delay_dict)
 
     # # graph_pck_buf(pck_graph)
     # # graph_window_size(window_size_dict)
