@@ -91,22 +91,25 @@ if __name__ == '__main__':
         print 'Queue size: ', eq.qsize()
         print '-' * 80
         t, event_top = eq.get()
-        print 'exp_packe', event_top
+        print 'Event details', event_top
         assert t != None
         global_time = t
         event_type = event_top.get_type()
 
+        print "global time:", global_time
+        for l in links:
+            print "Link ID:", l
+            links[l].print_link_buffer()
+        # print 'Link 1 size: ', len(links['L1'].packet_queue)
+        # print 'Link 1 capacity size: ', links['L1'].capacity
+        # print 'Link 1 size: ', links['L1']
+        # print 'Link 1 buf: ', links['L1'].buf
 
-        print 'Link 1 size: ', len(links['L1'].packet_queue)
-        print 'Link 1 capacity size: ', links['L1'].capacity
-        print 'Link 1 size: ', links['L1']
-        print 'Link 1 buf: ', links['L1'].buf
-
-        # pck_graph.append(pck_tot_buffers(t, links))
-        # pck_drop_graph.append(drop_packets(t, links))
+        pck_graph.append(pck_tot_buffers(t, links))
+        pck_drop_graph.append(drop_packets(t, links))
         # print t, event_top
-        # store_packet_delay(packet_delay_dict, hosts, global_time)
-        # store_flow_rate(flow_rate_dict, hosts, global_time)
+        store_packet_delay(packet_delay_dict, hosts, global_time)
+        store_flow_rate(flow_rate_dict, hosts, global_time)
 
         # Host or Router receives a packet
         if event_type == PACKET_RECEIVED:
@@ -139,11 +142,14 @@ if __name__ == '__main__':
 
             ec.create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
 
+        elif event_type == REMOVE_FROM_BUFFER:
+            ep.process_remove_from_buffer_event(event_top, global_time)
+
         elif event_type == ROUTING_PACKET_RECEIVED:
             ep.process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
         elif event_type == GRAPH_EVENT:
             # Hackish solution to stop the program
-            if eq.qsize() < 6:
+            if eq.qsize() < 4:
                 break
 
             store_flow_rate(flow_rate_dict, hosts, global_time)
@@ -152,7 +158,7 @@ if __name__ == '__main__':
 
         elif event_type == UPDATE_WINDOW:
             # Hackish solution to stop the program
-            if eq.qsize() < 6:
+            if eq.qsize() < 13:
                 break
 
             # if eq.qsize() == 0:
@@ -175,6 +181,7 @@ if __name__ == '__main__':
             ec.create_update_window_event(curr_host, global_time + PERIODIC_FAST_INTERVAL)
 
         else:
+            print "event type", event_type
             assert False
 
 

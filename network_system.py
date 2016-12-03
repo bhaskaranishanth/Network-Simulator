@@ -62,7 +62,7 @@ class NetworkSystem:
                 else:
                     break
 
-            assert len(link.packet_queue) == 0 or len(link.packet_queue) == h.get_window_size()
+            # assert len(link.packet_queue) == 0 or len(link.packet_queue) == h.get_window_size()
 
 
     def create_packet_events(self):
@@ -81,9 +81,8 @@ class NetworkSystem:
                 p = link.packet_queue[0]
                 curr_src = h
                 next_dest = link.get_link_endpoint(h)
-                link.remove_from_buffer(p, p.get_capacity())
-                self.ec.create_packet_received_event(p.get_init_time(), 
-                    p, link, curr_src.get_ip(), next_dest.get_ip())
+                # link.remove_from_buffer(p, p.get_capacity())
+                self.ec.create_remove_from_buffer_event(p.get_init_time(), p, curr_src.get_ip(), next_dest.get_ip())
 
 
 
@@ -161,11 +160,18 @@ class NetworkSystem:
             assert src in hosts or src in routers, 'Endpoint is invalid'
             assert dst in hosts or dst in routers, 'Endpoint is invalid'
 
+            print src, dst, link_id
             # Create two way links
             src_node = hosts[src] if src in hosts else routers[src]
             dst_node = hosts[dst] if dst in hosts else routers[dst]
             l = Link(link_id, buf, prop_time, trans_time, congestion, direction)
+            # print l
+            print l.get_endpoints()
             l.connect(src_node, dst_node)
+            l.direction = (src, dst)
+            print "what"
+            print l.get_direction()
+            assert l.get_direction() != None
             links[link_id] = l
 
             # Set up links for routers and hosts

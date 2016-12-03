@@ -8,15 +8,13 @@ class EventCreator:
         self.eq = eq
         
 
-    def create_packet_received_event(self, global_time, pkt, link, src, dest):
+    def create_packet_received_event(self, end_time, pkt, link, src, dest):
         """
         Takes in packet and link information, creates a PACKET_RECEIVED
         event and adds it to the global queue. Returns the event
         to make it easier to debug code.
         """
-        new_event = Event(PACKET_RECEIVED, 
-            global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
-            src, dest, pkt)
+        new_event = Event(PACKET_RECEIVED, end_time, src, dest, pkt)
         self.eq.put((new_event.get_initial_time(), new_event))
 
         # link.remove_from_buffer(pkt, pkt.get_capacity())
@@ -63,6 +61,11 @@ class EventCreator:
         self.eq.put((timeout_event.get_initial_time(), timeout_event))
         return timeout_event
 
+    def create_remove_from_buffer_event(self, end_time, pkt, src, dest):
+        remove_from_buffer_event = Event(REMOVE_FROM_BUFFER, end_time, src, dest, pkt)
+        self.eq.put((remove_from_buffer_event.get_initial_time(), remove_from_buffer_event))
+        return remove_from_buffer_event
+
     def create_next_packet_event(self, curr_link, global_time, event_top, hosts, routers):
         processed_packet_dest_loc = event_top.get_dest()
         if len(curr_link.packet_queue) != 0:
@@ -92,9 +95,10 @@ class EventCreator:
 
                 # Create new event with the same packet
                 if next_dest == processed_packet_dest_loc:
-                    self.create_packet_received_event(global_time - curr_link.get_prop_time(), next_packet, curr_link, curr_src, next_dest)
+                    self.create_remove_from_buffer_event(global_time + curr_link.get_prop_time(), next_packet, curr_src, next_dest)
                 else:
-                    self.create_packet_received_event(global_time, next_packet, curr_link, curr_src, next_dest)
+                    self.create_remove_from_buffer_event(global_time + curr_link.get_prop_time() + pkt.get_capacity() / link.get_trans_time(), next_packet, curr_src, next_dest)
+
 
                 # create_packet_received_event(global_time, next_packet, curr_link, curr_src, next_dest)
 

@@ -16,6 +16,7 @@ class Link:
         self.prop_time = float(prop_time) * 10 ** (-3)
         self.congestion = congestion
         self.direction = direction
+        self.last_pkt_dest_time = -1
 
         self.packet_queue = deque()
 
@@ -28,6 +29,8 @@ class Link:
         self.src = None
         self.dst = None
 
+        print "created"
+
     """ ACCESSOR METHODS """
 
 
@@ -39,6 +42,7 @@ class Link:
         assert isinstance(dst, Router) or isinstance(dst, Host)
         self.src = src
         self.dst = dst
+        # self.set_direction(src.get_ip(), dst.get_ip())
 
 
     def get_endpoints(self):
@@ -69,8 +73,24 @@ class Link:
         '''
         return self.num_packets
 
+    def get_direction(self):
+        return self.direction
+
+    def get_last_pkt_dest_time(self):
+        return self.last_pkt_dest_time
+
     
     """ MUTATOR METHODS """
+
+    def set_direction(self, direction):
+        print direction
+        # exit(1)
+        assert len(direction) == 2
+        assert type(direction[0]) == str and type(direction[1]) == str
+        self.direction = direction
+
+    def set_last_pkt_dest_time(self, last_pkt_dest_time):
+        self.last_pkt_dest_time = last_pkt_dest_time
 
     def connect(self, src, dst):
         """
