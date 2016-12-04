@@ -85,9 +85,9 @@ if __name__ == '__main__':
         if h.get_tcp():
             ec.create_update_window_event(h, PERIODIC_FAST_INTERVAL)
     
-
+    done = 0
     # Continuously pull events from the priority queue
-    while eq.qsize() != 0:
+    while eq.qsize() != 0 and not done:
         print 'Queue size: ', eq.qsize()
         print '-' * 80
         t, event_top = eq.get()
@@ -119,8 +119,8 @@ if __name__ == '__main__':
             ep.process_timeout_event(event_top, global_time, hosts, dropped_packets, 
                 acknowledged_packets)
         elif event_type == DYNAMIC_ROUTING:
-            if eq.qsize() == 0 or eq.qsize() == 1:
-                break
+            # if eq.qsize() == 0 or eq.qsize() == 1:
+            #     break
             # elif eq.qsize() == 1:
             #     t, event_top = eq.get()
             #     if event_type == UPDATE_WINDOW:
@@ -149,8 +149,8 @@ if __name__ == '__main__':
             ep.process_routing_packet_received_event(event_top, hosts, links, dropped_packets, global_time, routers)
         elif event_type == GRAPH_EVENT:
             # Hackish solution to stop the program
-            if eq.qsize() < 4:
-                break
+            # if eq.qsize() < 2:
+            #     break
 
             store_flow_rate(flow_rate_dict, hosts, global_time)
             store_packet_delay(packet_delay_dict, hosts, global_time)
@@ -158,8 +158,8 @@ if __name__ == '__main__':
 
         elif event_type == UPDATE_WINDOW:
             # Hackish solution to stop the program
-            if eq.qsize() < 13:
-                break
+            # if eq.qsize() < 5:
+            #     break
 
             # if eq.qsize() == 0:
             #     break
@@ -183,6 +183,13 @@ if __name__ == '__main__':
         else:
             print "event type", event_type
             assert False
+
+        done = 1
+        for h in hosts:
+            print "out pkts", hosts[h].get_outstanding_pkts()
+            if not hosts[h].flow_done():
+                done = 0
+                break
 
 
     # for l in links:

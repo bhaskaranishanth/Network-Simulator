@@ -67,7 +67,7 @@ class NetworkSystem:
 
     def create_packet_events(self):
         # Creates timeout events for all packets in buffer
-        # Creates packet received event for first packet in buffer
+        # Creates remove from buffer event for first packet in buffer
         for _, h in self.hosts.iteritems():
             link = h.get_link()
             for i, p in enumerate(link.packet_queue):
@@ -121,9 +121,10 @@ class NetworkSystem:
 
 
     def initialize_packets(self):
+        count = 0
         for key in self.flows:
             event_list = []
-            count = 0
+            # count = 0
             curr_host = self.hosts[self.flows[key].get_src()]
             curr_host.set_tcp(self.flows[key].get_tcp())
             curr_host.set_flow_id(key)
@@ -132,9 +133,10 @@ class NetworkSystem:
                 count += 1
                 packet.set_packet_id(count)
                 curr_host.insert_packet(packet)
+                curr_host.add_outstanding_pkt(count)
 
-                # if count == 1000:
-                #     break
+                if count == 50:
+                    break
 
     def process_input(self):
         host_f = open(HOST_FILE, 'r')

@@ -274,6 +274,11 @@ class EventProcessor:
                     # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
                     print "exp_packe t waht, "
 
+                    for h in hosts:
+                        if curr_packet.get_packet_id() in hosts[h].get_outstanding_pkts():
+                            hosts[h].del_outstanding_pkt(curr_packet.get_packet_id())
+
+
                     # exit(1)
 
                 # Convert packet from host queue into event and insert into buffer

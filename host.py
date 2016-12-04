@@ -18,6 +18,7 @@ class Host:
         self.base_RTT = float('inf')
         self.last_RTT = self.base_RTT
         self.bytes_received = 0
+        self.outstanding_pkts = []
 
         # Store the received and missing packet ids
         # Figure out a way to deal with multiple flows
@@ -83,6 +84,12 @@ class Host:
 
     def get_last_missing_pkt_id(self):
         return self.last_miss_pkt_id
+
+    def get_outstanding_pkts(self):
+        return self.outstanding_pkts
+        
+    def flow_done(self):
+        return not self.outstanding_pkts
 
 
     """ MUTATOR METHODS """
@@ -156,6 +163,13 @@ class Host:
             return None
         else:
             return self.q.get()
+
+    def add_outstanding_pkt(self, pkt):
+        self.outstanding_pkts.append(pkt)
+
+    def del_outstanding_pkt(self, pkt):
+        self.outstanding_pkts.remove(pkt)
+
 
     
     """ PRINT METHODS """
