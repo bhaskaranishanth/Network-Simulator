@@ -28,6 +28,7 @@ class Host:
         self.last_recv_pkt_id = None
         self.last_miss_pkt_id = None
 
+        # self.abs_window_count = 0 
 
     
     """ ACCESSOR METHODS """
@@ -102,9 +103,22 @@ class Host:
         self.link = link
         
     def set_window_count(self, window_count):
+
+        # assert self.window_count == window_count + 1 or self.window_count == window_count - 1
+        # self.abs_window_count += 1 if window_count > self.window_count else 0
+        # print 'outstanding_pkts packets: ', self.outstanding_pkts
+        print 'Window countb: ', window_count
+        print 'Window count: ', self.window_count
+        # print 'Abs Window count: ', self.abs_window_count
+        print 'Window size: ', self.window_size
+        assert window_count >= 0
         self.window_count = window_count
+        
+        # assert self.abs_window_count - self.window_count + len(self.outstanding_pkts) == 70
+
 
     def set_window_size(self, window_size):
+        assert window_size > 0
         self.window_size = window_size
 
     def set_threshold(self, threshold):

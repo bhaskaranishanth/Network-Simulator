@@ -83,29 +83,50 @@ class NetworkSystem:
                 self.ec.create_remove_from_buffer_event(p.get_init_time(), p, curr_src.get_ip(), next_dest.get_ip())
 
 
+    def populate_packets_into_buffer(self, curr_host, global_time, dropped_packets):
 
-    # def create_packet_received_event(self, global_time, pkt, link, src, dest):
-    #     """
-    #     Takes in packet and link information, creates a PACKET_RECEIVED
-    #     event and adds it to the global queue. Returns the event
-    #     to make it easier to debug code.
-    #     """
-    #     new_event = Event(PACKET_RECEIVED, 
-    #         global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
-    #         src, dest, pkt)
-    #     self.eq.put((new_event.get_initial_time(), new_event))
-    #     return new_event
+        while curr_host.get_window_count() < curr_host.get_window_size():
+            pkt = curr_host.remove_packet()
+            # if pkt.packet_id == 9000:
+            #     print 'Host Window Reached here'
+            #     exit(1)
+            next_link = curr_host.get_link()
+            next_dest = next_link.get_link_endpoint(curr_host)
+            if pkt != None:
+                assert pkt.get_curr_loc() != None
+                # self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
+                if len(next_link.packet_queue) == 0:
+                    if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
+                        # Insert packet into the next link's buffer
+                        if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                            self.ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
+                            curr_host.set_window_count(curr_host.get_window_count()+1)
+                            self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
+                        else:
+                            curr_host.insert_packet(pkt)
+                            break
+                    elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
+                        if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                            next_time = max(next_link.get_last_pkt_dest_time(), global_time)
+                            self.ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
+                            self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
+                            curr_host.set_window_count(curr_host.get_window_count()+1)
+                        else:
+                            curr_host.insert_packet(pkt)
+                            break
+                    else:
+                        assert False
+                else:
+                    if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                        self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
+                        curr_host.set_window_count(curr_host.get_window_count()+1)
+                    else:
+                        # TODO
+                        curr_host.insert_packet(pkt)
+                        break
+            else:
+                break
 
-    # def create_timeout_event(self, end_time, pkt, global_time):
-    #     """
-    #     Takes in end time and packet, creates a TIMEOUT_EVENT
-    #     event and adds it to the global queue. Returns the event
-    #     to make it easier to debug code.
-    #     """
-    #     pkt.set_init_time(global_time)
-    #     timeout_event = Event(TIMEOUT_EVENT, end_time, pkt.get_src(), pkt.get_dest(), pkt)
-    #     self.eq.put((timeout_event.get_initial_time(), timeout_event))
-    #     return timeout_event
 
     def initialize_flow_RTT(self):
         '''
@@ -133,7 +154,7 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                if count == 1000:
+                if count == 700:
                     break
 
     def process_input(self):
