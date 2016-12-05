@@ -325,21 +325,24 @@ class EventProcessor:
                                 if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
                                     self.ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
                                     curr_host.set_window_count(curr_host.get_window_count()+1)
-                                # else:
+                                else:
+                                    break
                                 #     assert False
                             elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
                                 if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
                                     next_time = max(next_link.get_last_pkt_dest_time(), global_time)
                                     self.ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
                                     curr_host.set_window_count(curr_host.get_window_count()+1)
-                                # else:
+                                else:
+                                    break
                                 #     assert False
                             else:
                                 assert False
                         else:
                             if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
                                 curr_host.set_window_count(curr_host.get_window_count()+1)
-                            # else:
+                            else:
+                                break
                             #     # TODO
                             #     assert False
 
