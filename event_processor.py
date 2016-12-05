@@ -68,11 +68,13 @@ class EventProcessor:
 
         # Insert packet into buffer
         if next_link.insert_into_buffer(routing_pkt):
-            if len(next_link.packet_queue) == 1:
-                self.ec.create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
+            return True
+            # if len(next_link.packet_queue) == 1:
+            #     self.ec.create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
         else:
             dropped_packets.append(routing_pkt)
             next_link.increment_drop_packets()
+            return False
 
     def process_remove_from_buffer_event(self, event_top, global_time):
         curr_link = self.get_link_from_event(event_top, self.links)
@@ -87,8 +89,12 @@ class EventProcessor:
         end_time = global_time + curr_link.get_prop_time() + \
             curr_packet.get_capacity() / curr_link.get_trans_time()
 
-        self.ec.create_packet_received_event(end_time, curr_packet, 
-            curr_link, curr_src, curr_dest)
+        if curr_packet.get_type() == ROUTER_PACKET:
+            self.ec.create_routing_packet_received_event(end_time, curr_packet, 
+                curr_link, curr_src, curr_dest)
+        else:
+            self.ec.create_packet_received_event(end_time, curr_packet, 
+                curr_link, curr_src, curr_dest)
 
         curr_link.set_direction((curr_src, curr_dest))
         curr_link.set_last_pkt_dest_time(end_time)
@@ -112,11 +118,12 @@ class EventProcessor:
 
 
     def process_routing_packet_received_event(self, event_top, hosts, links, dropped_packets, global_time, routers):
-        curr_link = self.get_link_from_event(event_top, links)
+        # curr_link = self.get_link_from_event(event_top, links)
         curr_packet = event_top.get_data()
-        curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
+        assert curr_packet.get_type() == ROUTER_PACKET
+        # curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
 
-        self.ec.create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
+        # self.ec.create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
         # Ignore routing packets sent to host
         if event_top.get_dest() in hosts:
             return 
@@ -144,7 +151,24 @@ class EventProcessor:
             new_weight = l.get_weight() + routing_pkt.get_payload()
             assert routing_pkt.get_src() in hosts
             new_pkt = Packet(ROUTER_PACKET, new_weight, routing_pkt.get_src(), None, dest.get_ip(), None)
-            self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
+
+            if len(l.packet_queue) == 0:
+                if l.get_direction() == (curr_router, dest.get_ip()):
+                    # Insert packet into the next link's buffer
+                    if self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest):
+                        self.ec.create_remove_from_buffer_event(global_time, new_pkt, curr_router, dest.get_ip())
+                elif l.get_direction() == (dest.get_ip(), curr_router):
+                    if self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest):
+                        next_time = max(l.get_last_pkt_dest_time(), global_time)
+                        self.ec.create_remove_from_buffer_event(next_time, new_pkt, dest.get_ip(), curr_router)
+                else:
+                    print "link: ", l
+                    print "Direction: ", l.get_direction()
+                    print "Curr: ", (curr_router, dest.get_ip())
+                    assert False
+            else:
+                self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
+            # self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
 
 
     def process_packet_received_event(self, event_top, global_time, links, routers, hosts, dropped_packets, acknowledged_packets, window_size_dict):
@@ -154,6 +178,7 @@ class EventProcessor:
         print '*' * 40
         # curr_link = self.get_link_from_event(event_top, links)
         curr_packet = event_top.get_data()
+        assert curr_packet.get_type() != ROUTER_PACKET
         # curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
         # print curr_packet
 

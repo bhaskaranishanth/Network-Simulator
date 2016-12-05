@@ -151,12 +151,27 @@ if __name__ == '__main__':
                 routers[r].reset_weight_table()
 
             # Creates routing packet for each host and adds to queue
-            for host_id in hosts:
-                link = hosts[host_id].get_link()
-                routing_pkt = Packet(ROUTER_PACKET, link.get_weight(), host_id, None, link.get_link_endpoint(hosts[host_id]).get_ip(), None)
-                dest = link.get_link_endpoint(hosts[host_id])
-
-                ep.insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
+            for _, h in hosts.iteritems():
+                l = h.get_link()
+                dest = l.get_link_endpoint(h)
+                routing_pkt = Packet(ROUTER_PACKET, l.get_weight(), h.get_ip(), None, l.get_link_endpoint(h).get_ip(), None)
+                if len(l.packet_queue) == 0:
+                    if l.get_direction() == (h.get_ip(), dest.get_ip()):
+                        # Insert packet into the next link's buffer
+                        if ep.insert_routing_packet_into_buffer(routing_pkt, l, dropped_packets, global_time, dest):
+                            ec.create_remove_from_buffer_event(global_time, routing_pkt, h.get_ip(), dest.get_ip())
+                    elif l.get_direction() == (dest.get_ip(), h.get_ip()):
+                        if ep.insert_routing_packet_into_buffer(routing_pkt, l, dropped_packets, global_time, dest):
+                            next_time = max(l.get_last_pkt_dest_time(), global_time)
+                            ec.create_remove_from_buffer_event(next_time, routing_pkt, dest.get_ip(), h.get_ip())
+                    else:
+                        print "link: ", l
+                        print "Direction: ", l.get_direction()
+                        print "Curr: ", (h.get_ip(), dest.get_ip())
+                        assert False
+                else:
+                    ep.insert_routing_packet_into_buffer(routing_pkt, l, dropped_packets, global_time, dest)
+                # ep.insert_routing_packet_into_buffer(routing_pkt, link, dropped_packets, global_time, dest)
                 # create_routing_packet_received_event(global_time, routing_pkt, link, host_id, dest):
 
             ec.create_dynamic_routing_event(global_time + ROUTING_INTERVAL)
@@ -274,7 +289,7 @@ if __name__ == '__main__':
     # # print window_size_dict
     # # print flow_rate_dict
     graph_flow_rate(flow_rate_dict)
-    # graph_pck_buf(pck_graph)
+    graph_pck_buf(pck_graph)
     graph_window_size(window_size_dict)
     graph_packet_delay(packet_delay_dict)
 

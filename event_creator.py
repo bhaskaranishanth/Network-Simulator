@@ -22,15 +22,13 @@ class EventCreator:
 
         return new_event
 
-    def create_routing_packet_received_event(self, global_time, pkt, link, src, dest):
+    def create_routing_packet_received_event(self, end_time, pkt, link, src, dest):
         """
         Takes in packet and link information, creates a PACKET_RECEIVED
         event and adds it to the global queue. Returns the event
         to make it easier to debug code.
         """
-        new_event = Event(ROUTING_PACKET_RECEIVED, 
-            global_time + pkt.get_capacity() / link.get_trans_time() + link.get_prop_time(), 
-            src, dest, pkt)
+        new_event = Event(ROUTING_PACKET_RECEIVED, end_time, src, dest, pkt)
         self.eq.put((new_event.get_initial_time(), new_event))
         return new_event
 
