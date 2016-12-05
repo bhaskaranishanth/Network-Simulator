@@ -50,13 +50,13 @@ class EventCreator:
         return new_event
 
 
-    def create_timeout_event(self, end_time, pkt, global_time):
+    def create_timeout_event(self, end_time, pkt):
         """
         Takes in end time and packet, creates a TIMEOUT_EVENT
         event and adds it to the global queue. Returns the event
         to make it easier to debug code.
         """
-        pkt.set_init_time(global_time)
+        # pkt.set_init_time(global_time)
         timeout_event = Event(TIMEOUT_EVENT, end_time, pkt.get_src(), pkt.get_dest(), pkt)
         self.eq.put((timeout_event.get_initial_time(), timeout_event))
         return timeout_event

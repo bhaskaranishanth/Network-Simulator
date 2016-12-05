@@ -72,9 +72,7 @@ class NetworkSystem:
             link = h.get_link()
             for i, p in enumerate(link.packet_queue):
                 # Creates timeout event
-                self.ec.create_timeout_event(TIMEOUT_VAL + p.get_init_time(),
-                    p, p.get_init_time())
-                
+                self.ec.create_timeout_event(TIMEOUT_VAL + p.get_init_time(), p)
             if len(link.packet_queue) > 0:
                 # Create the first packet received event
                 # TODO: possibly remove the packet from the buffer?
@@ -135,8 +133,8 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                if count == 50:
-                    break
+                # if count == 100:
+                #     break
 
     def process_input(self):
         host_f = open(HOST_FILE, 'r')

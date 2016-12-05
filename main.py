@@ -63,7 +63,7 @@ if __name__ == '__main__':
     ec = network.get_event_creator()
     ep = network.get_event_processor()
 
-    # ec.create_dynamic_routing_event(ROUTING_INTERVAL)
+    ec.create_dynamic_routing_event(ROUTING_INTERVAL)
     ec.create_graph_event(GRAPH_EVENT_INTERVAL)
 
     global_time = 0
@@ -93,13 +93,21 @@ if __name__ == '__main__':
         t, event_top = eq.get()
         print 'Event details', event_top
         assert t != None
+        assert t >= global_time
         global_time = t
         event_type = event_top.get_type()
 
-        print "global time:", global_time
-        for l in links:
-            print "Link ID:", l
-            links[l].print_link_buffer()
+
+        # for h in hosts:
+        #     print "Host Window count:", hosts[h].get_window_count()
+        #     print "Host Window size:", hosts[h].get_window_size()
+
+        # print "global time:", global_time
+        # for l in links:
+        #     print "Link ID:", l
+        #     links[l].print_link_buffer()
+        #     print "Host Window Link id:", l
+        #     print "Host Window Link size:", len(links[l].packet_queue)
         # print 'Link 1 size: ', len(links['L1'].packet_queue)
         # print 'Link 1 capacity size: ', links['L1'].capacity
         # print 'Link 1 size: ', links['L1']
@@ -110,6 +118,17 @@ if __name__ == '__main__':
         # print t, event_top
         store_packet_delay(packet_delay_dict, hosts, global_time)
         store_flow_rate(flow_rate_dict, hosts, global_time)
+
+        # if event_type != DYNAMIC_ROUTING and event_type != GRAPH_EVENT and event_type != UPDATE_WINDOW:
+        #     pkt = event_top.get_data()
+        #     if pkt.get_packet_id() == 14:
+        #         print "global time", global_time
+        #         print "L0 buffer", links['L0'].print_link_buffer()
+        #         while eq.qsize() != 0:
+        #             t, event_top = eq.get()
+        #             print 'Event details at packet 14', event_top
+        #         exit(1)
+
 
         # Host or Router receives a packet
         if event_type == PACKET_RECEIVED:
@@ -180,13 +199,62 @@ if __name__ == '__main__':
 
             ec.create_update_window_event(curr_host, global_time + PERIODIC_FAST_INTERVAL)
 
+            # while curr_host.get_window_count() < curr_host.get_window_size():
+            #     pkt = curr_host.remove_packet()
+            #     next_link = curr_host.get_link()
+            #     next_dest = next_link.get_link_endpoint(curr_host)
+            #     if pkt != None:
+            #         assert pkt.get_curr_loc() != None
+            #         ec.create_timeout_event(TIMEOUT_VAL + pkt.get_init_time(),
+            #             pkt, pkt.get_init_time())
+            #         if len(next_link.packet_queue) == 0:
+            #             if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
+            #                 # Insert packet into the next link's buffer
+            #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+            #                     ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
+            #                     curr_host.set_window_count(curr_host.get_window_count()+1)
+            #                 # else:
+            #                 #     assert False
+            #             elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
+            #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+            #                     next_time = max(next_link.get_last_pkt_dest_time(), global_time)
+            #                     ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
+            #                     curr_host.set_window_count(curr_host.get_window_count()+1)
+            #                 # else:
+            #                 #     assert False
+            #             else:
+            #                 assert False
+            #         else:
+            #             if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+            #                 curr_host.set_window_count(curr_host.get_window_count()+1)
+            #             # else:
+            #             #     # TODO
+            #             #     assert False
+
+
+            #         # if next_link.insert_into_buffer(pkt):
+            #         #     curr_host.set_window_count(curr_host.get_window_count()+1)
+            #         #     if len(next_link.packet_queue) == 1:
+            #         #         next_link.remove_from_buffer(pkt, pkt.get_capacity())
+
+            #         #         self.ec.create_packet_received_event(global_time, pkt, next_link, curr_host.get_ip(), next_dest.get_ip())
+
+            #         #     dst_time = global_time + TIMEOUT_VAL
+            #         #     self.ec.create_timeout_event(dst_time, pkt, global_time)
+            #         # else:
+            #         #     # Put the packet back into the host queue
+            #         #     curr_host.insert_packet(pkt)
+            #         #     break
+            #     else:
+            #         break
+
         else:
             print "event type", event_type
             assert False
 
         done = 1
         for h in hosts:
-            print "out pkts", hosts[h].get_outstanding_pkts()
+            # print "out pkts", hosts[h].get_outstanding_pkts()
             if not hosts[h].flow_done():
                 done = 0
                 break

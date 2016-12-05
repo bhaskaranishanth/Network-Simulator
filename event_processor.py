@@ -98,13 +98,16 @@ class EventProcessor:
             next_dest = next_pkt.get_curr_loc()
             next_entity = self.routers if next_dest in self.routers else self.hosts
             next_src = curr_link.get_link_endpoint(next_entity[next_dest]).get_ip()
+            print "next source", type(next_src)
+            print "next dest", type(next_dest)
             assert curr_link.get_direction() != None
             if curr_link.get_direction() == (next_src, next_dest):
                 self.ec.create_remove_from_buffer_event(global_time + next_pkt.get_capacity() / curr_link.get_trans_time(), next_pkt, next_src, next_dest)
-            elif curr_link.get_direction() != (next_dest, next_src):
+            elif curr_link.get_direction() == (next_dest, next_src):
                 next_time = max(curr_link.get_last_pkt_dest_time(), global_time)
                 self.ec.create_remove_from_buffer_event(next_time, next_pkt, next_dest, next_src)
             else:
+                print curr_link.get_direction()
                 assert False
 
 
@@ -198,6 +201,8 @@ class EventProcessor:
                 if RTT < curr_host.get_base_RTT():
                     curr_host.set_base_RTT(RTT)
                 curr_host.set_last_RTT(RTT)
+                print "changing window size base RTT", curr_host.get_base_RTT()
+                print "changing window size last RTT", curr_host.get_last_RTT()
                 # if not curr_host.get_tcp():
                 #     print "performing Reno"
                 #     exit(1)
@@ -277,6 +282,7 @@ class EventProcessor:
                     for h in hosts:
                         if curr_packet.get_packet_id() in hosts[h].get_outstanding_pkts():
                             hosts[h].del_outstanding_pkt(curr_packet.get_packet_id())
+                            break
 
 
                     # exit(1)
@@ -287,8 +293,7 @@ class EventProcessor:
                     pkt = curr_host.remove_packet()
                     if pkt != None:
                         assert pkt.get_curr_loc() != None
-                        self.ec.create_timeout_event(TIMEOUT_VAL + pkt.get_init_time(),
-                            pkt, pkt.get_init_time())
+                        self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
                         if len(next_link.packet_queue) == 0:
                             if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
                                 # Insert packet into the next link's buffer
@@ -423,8 +428,20 @@ class EventProcessor:
             dropped_packets.append(p)
 
             # Attempt to insert new packet back to buffer
-            self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
-
+            # self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
+            if len(curr_link.packet_queue) == 0:
+                if curr_link.get_direction() == (curr_host.get_ip(), next_hop.get_ip()):
+                    # Insert packet into the next link's buffer
+                    if self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop):
+                        self.ec.create_remove_from_buffer_event(global_time, p, curr_host.get_ip(), next_hop.get_ip())
+                elif curr_link.get_direction() == (next_hop.get_ip(), curr_host.get_ip()):
+                    if self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop):
+                        next_time = max(curr_link.get_last_pkt_dest_time(), global_time)
+                        self.ec.create_remove_from_buffer_event(next_time, p, next_hop.get_ip(), curr_host.get_ip())
+                else:
+                    assert False
+            else:
+                self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
 
             # if curr_link.insert_into_buffer(p, p.get_capacity()):
             #     if len(curr_link.packet_queue) == 1:
@@ -438,7 +455,7 @@ class EventProcessor:
             #     #assert False
 
             dst_time = global_time + TIMEOUT_VAL
-            self.ec.create_timeout_event(dst_time, p, global_time)
+            self.ec.create_timeout_event(dst_time, p)
 
         print 'Timeout happened!!!!!'
         print 'Other'
