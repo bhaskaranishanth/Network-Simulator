@@ -24,6 +24,7 @@ class Link:
         self.num_packets = 0
         self.next_free_time = -1
         self.num_dropped_packets = 0
+        self.packet_size_sent = 0
 
         # Source and destinations are either Routers or Hosts
         self.src = None
@@ -79,6 +80,9 @@ class Link:
     def get_last_pkt_dest_time(self):
         return self.last_pkt_dest_time
 
+    def get_packet_size_sent(self):
+        return self.packet_size_sent
+
     
     """ MUTATOR METHODS """
 
@@ -91,6 +95,10 @@ class Link:
 
     def set_last_pkt_dest_time(self, last_pkt_dest_time):
         self.last_pkt_dest_time = last_pkt_dest_time
+
+    def set_packet_size_sent(self, size_sent):
+        assert size_sent > self.packet_size_sent
+        self.packet_size_sent = size_sent
 
     def connect(self, src, dst):
         """
@@ -119,6 +127,7 @@ class Link:
             self.capacity += packet.get_capacity()
             self.num_packets += 1
             self.packet_queue.append(packet)
+            self.packet_size_sent += packet.get_capacity()
             return True
 
     def increment_drop_packets(self):

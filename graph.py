@@ -22,39 +22,6 @@ def graph_window_size(window_size_dict):
         y = [elem[1] for elem in window_size_list]
         line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
         lines.append(line_up)
-        # interval = 0
-        # step = 5
-        # start = 100
-        # i = 100
-        # new_x = [elem[0] for elem in window_size_list[:i]]
-        # new_y = [elem[1] for elem in window_size_list[:i]]
-
-        # while i < len(x):
-        #     new_sum_x = 0
-        #     new_sum_y = 0
-        #     while i < len(x) and interval < x[i] and x[i] < interval + step:
-        #         new_sum_x += x[i]
-        #         new_sum_y += y[i]
-        #         i += 1
-        #     if i >= len(x):
-        #         break
-
-        #     new_avg_x = 0
-        #     new_avg_y = 0
-        #     if start - i == 0:
-        #         new_avg_x = new_sum_x
-        #         new_avg_y = new_sum_y
-        #     else:
-        #         new_avg_x = new_sum_x / (i - start)
-        #         new_avg_y = new_sum_y / (i - start)
-        #     start = i
-        #     i += 1
-        #     interval += step
-        #     new_x.append(new_avg_x)
-        #     new_y.append(new_avg_y)
-
-        # line_up, = plt.plot(new_x, new_y, linewidth = 2.0)
-
     plt.ylabel("Window Size")
     plt.xlabel("Time")
     plt.legend()
@@ -67,7 +34,10 @@ def graph_packet_delay(packet_delay_dict):
         lines = []
         x = [elem[0] for elem in packet_delay_list]
         y = [elem[1] for elem in packet_delay_list]
-        line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
+
+        avg_time = 5
+        avg_x, avg_y = smooth_avg_list(x, y, avg_time)
+        line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label=key)
         lines.append(line_up)
 
     plt.ylabel("Packet delay")
@@ -76,13 +46,72 @@ def graph_packet_delay(packet_delay_dict):
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
+def smooth_avg_list(x, y, avg_time):
+    avg_x = []
+    avg_y = []
+    current_time = avg_time
+    i = 0
+    while i < len(x):
+        temp_x = []
+        temp_y = []
+        while i < len(x) and x[i] < current_time:
+            temp_x.append(x[i])
+            temp_y.append(y[i])
+            i += 1
+        current_time += avg_time
+        avg_x.append(sum(temp_x)/float(len(temp_x)))
+        avg_y.append(sum(temp_y)/float(len(temp_y)))
+
+    return avg_x, avg_y
+
+def graph_packet_loss(packet_loss_dict):
+    for key in ['L1', 'L2']:
+    # for key in packet_loss_dict:
+        packet_loss_list = packet_loss_dict[key]
+        lines = []
+        x = [elem[0] for elem in packet_loss_list]
+        y = [elem[1] for elem in packet_loss_list]
+
+        avg_x = []
+        avg_y = []
+        avg_time = 1
+        current_time = avg_time
+        i = 0
+        start = 0
+        end = 0
+        while i < len(x):
+            while i < len(x) and x[i] < current_time:
+                end = y[i]
+                i += 1
+
+            current_time += avg_time
+            avg_x.append(x[i - 1])
+            avg_y.append(end - start)
+
+            start = end
+
+        line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label=key)
+        lines.append(line_up)
+
+    plt.ylabel("Packet loss")
+    plt.xlabel("Time")
+    plt.legend()
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
+
+
+
 def graph_flow_rate(flow_rate_dict):
     for key in flow_rate_dict:
         flow_rate_list = flow_rate_dict[key]
         lines = []
         x = [elem[0] for elem in flow_rate_list]
         y = [elem[1] for elem in flow_rate_list]
-        line_up, = plt.plot(x, y, linewidth = 2.0, label=key)
+
+        avg_time = 5
+        avg_x, avg_y = smooth_avg_list(x, y, avg_time)
+
+        line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label=key)
         lines.append(line_up)
 
     plt.ylabel("Flow rate")
@@ -91,6 +120,25 @@ def graph_flow_rate(flow_rate_dict):
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
+
+def graph_link_rate(link_rate_dict):
+    for key in link_rate_dict:
+        link_rate_list = link_rate_dict[key]
+        lines = []
+        x = [elem[0] for elem in link_rate_list]
+        y = [elem[1] for elem in link_rate_list]
+
+        avg_time = 5
+        avg_x, avg_y = smooth_avg_list(x, y, avg_time)
+
+        line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label=key)
+        lines.append(line_up)
+
+    plt.ylabel("Link rate")
+    plt.xlabel("Time")
+    plt.legend()
+    #plt.axis([0,max_x, 0, max_y * 2])
+    plt.show()
 
 
 def graph_pck_drop_rate(drop_packets):
@@ -124,11 +172,27 @@ def graph_pck_buf(pck_graph_dict):
 
         x = [elem[0] for elem in value]
         y = [elem[1] for elem in value]
-        # x = [elem[0] for elem in value][0:len(points):500]
-        # y = [elem[1] for elem in value][0:len(points):500]
+
+        avg_x = []
+        avg_y = []
+        avg_time = 5
+        current_time = avg_time
+        i = 0
+        while i < len(x):
+            temp_x = []
+            temp_y = []
+            while i < len(x) and x[i] < current_time:
+                temp_x.append(x[i])
+                temp_y.append(y[i])
+                i += 1
+            current_time += avg_time
+            avg_x.append(sum(temp_x)/float(len(temp_x)))
+            avg_y.append(sum(temp_y)/float(len(temp_y)))
+
 
         if key in ['L1', 'L2']:
-            line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
+            # line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
+            line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label = key)
             lines.append(line_up)
 
     plt.ylabel("Buffer Occupancy")
@@ -136,4 +200,5 @@ def graph_pck_buf(pck_graph_dict):
     plt.legend()
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
+
 

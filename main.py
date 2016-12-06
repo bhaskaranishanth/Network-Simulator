@@ -35,6 +35,27 @@ def store_flow_rate(flow_rate_dict, hosts, global_time):
 
     # print 'Diff '
 
+            # store_link_rate(link_rate_dict, links, global_time)
+
+def store_link_rate(link_rate_dict, links, global_time):
+    for l in ['L1', 'L2']:
+        prev = 0
+        if len(link_rate_dict[l]) != 0:
+            prev = links[l].prev
+
+        diff = ((links[l].get_packet_size_sent() - prev) * 8.0 / 10**6) / float(GRAPH_EVENT_INTERVAL)
+        # diff = ((links[l].get_packet_size_sent() - prev) / (10 ** 6 / 8.0)) / global_time
+        print 'Diff: ', global_time, diff, links[l].get_packet_size_sent(), prev
+        link_rate_dict[l].append((global_time, diff))
+        links[l].prev = links[l].get_packet_size_sent()
+
+    # print 'Diff '
+
+def store_packet_loss(packet_loss_dict, links, global_time):
+    for link_id, l in links.iteritems():
+        packet_loss_dict[link_id].append((global_time, l.get_drop_packets()))
+
+
 if __name__ == '__main__':
     network = NetworkSystem()
     hosts, routers, links, flows = network.retrieve_system()
@@ -74,6 +95,8 @@ if __name__ == '__main__':
     window_size_dict = {}
     packet_delay_dict = {}
     flow_rate_dict = {}
+    packet_loss_dict = {}
+    link_rate_dict = {}
 
     # Initialize graph dictionaries
     for _, h in hosts.iteritems():
@@ -85,6 +108,11 @@ if __name__ == '__main__':
         if h.get_tcp():
             ec.create_update_window_event(h, PERIODIC_FAST_INTERVAL)
     
+    for l in links:
+        packet_loss_dict[l] = []
+        link_rate_dict[l] = []
+
+
     done = 0
     # Continuously pull events from the priority queue
     while eq.qsize() != 0 and not done:
@@ -117,8 +145,9 @@ if __name__ == '__main__':
         # print 'Link 1 buf: ', links['L1'].buf
 
         pck_tot_buffers(pck_graph_dict, t, links)
+        store_link_rate(link_rate_dict, links, global_time)
         # pck_graph.append(pck_tot_buffers(t, links))
-        pck_drop_graph.append(drop_packets(t, links))
+        # pck_drop_graph.append(drop_packets(t, links))
         # # print t, event_top
         # store_packet_delay(packet_delay_dict, hosts, global_time)
         # store_flow_rate(flow_rate_dict, hosts, global_time)
@@ -180,6 +209,7 @@ if __name__ == '__main__':
             # print t, event_top
             store_flow_rate(flow_rate_dict, hosts, global_time)
             store_packet_delay(packet_delay_dict, hosts, global_time)
+            store_packet_loss(packet_loss_dict, links, global_time)
             ec.create_graph_event(global_time + GRAPH_EVENT_INTERVAL)
 
         elif event_type == UPDATE_WINDOW:
@@ -286,7 +316,13 @@ if __name__ == '__main__':
     # # print window_size_dict
     # # print flow_rate_dict
 
-    # graph_flow_rate(flow_rate_dict)
+    # print 'This is dropped: ', dropped_packets
+    # print 'This is dropped graph: ', packet_loss_dict['L5']
+    # print 'This is dropped graph: ', pck_drop_graph
+    graph_link_rate(link_rate_dict)
+    graph_packet_loss(packet_loss_dict)
+    # exit(1)
+    graph_flow_rate(flow_rate_dict)
     graph_pck_buf(pck_graph_dict)
     graph_window_size(window_size_dict)
-    # graph_packet_delay(packet_delay_dict)
+    graph_packet_delay(packet_delay_dict)
