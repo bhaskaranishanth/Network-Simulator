@@ -154,8 +154,13 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                # if count == 1000:
-                #     break
+            #     if count == 100:
+            #         break
+
+            # if count == 100:
+            #     break
+
+        # print "Host: oustanding pkts", self.hosts["S2"].get_outstanding_pkts()
 
     def process_input(self):
         host_f = open(HOST_FILE, 'r')

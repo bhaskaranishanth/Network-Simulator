@@ -190,9 +190,8 @@ def graph_pck_buf(pck_graph_dict):
             avg_y.append(sum(temp_y)/float(len(temp_y)))
 
 
-        if key in ['L1', 'L2']:
-            # line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
-            line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label = key)
+        if key in ['L1', 'L2', 'L3']:
+            line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
             lines.append(line_up)
 
     plt.ylabel("Buffer Occupancy")
