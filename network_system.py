@@ -98,7 +98,7 @@ class NetworkSystem:
                 if len(next_link.packet_queue) == 0:
                     if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
                         # Insert packet into the next link's buffer
-                        if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                        if self.ep.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                             self.ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
                             curr_host.set_window_count(curr_host.get_window_count()+1)
                             self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
@@ -106,7 +106,7 @@ class NetworkSystem:
                             curr_host.insert_packet(pkt)
                             break
                     elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
-                        if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                        if self.ep.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                             next_time = max(next_link.get_last_pkt_dest_time(), global_time)
                             self.ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
                             self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
@@ -117,7 +117,7 @@ class NetworkSystem:
                     else:
                         assert False
                 else:
-                    if self.ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                    if self.ep.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                         self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
                         curr_host.set_window_count(curr_host.get_window_count()+1)
                     else:

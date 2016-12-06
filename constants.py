@@ -1,7 +1,9 @@
-HOST_FILE = './conf/host2.conf'
-ROUTER_FILE = './conf/router2.conf'
-LINK_FILE = './conf/link2.conf'
-FLOW_FILE = './conf/flow2.conf'
+ext = '1'
+
+HOST_FILE = './conf/host' + ext + '.conf'
+ROUTER_FILE = './conf/router' + ext + '.conf'
+LINK_FILE = './conf/link' + ext + '.conf'
+FLOW_FILE = './conf/flow' + ext + '.conf'
 
 
 TIMEOUT_VAL = 1

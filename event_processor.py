@@ -33,48 +33,56 @@ class EventProcessor:
         return curr_link
 
 
-    def insert_packet_into_buffer(self, curr_packet, next_link, dropped_packets, global_time, next_hop):
+    def handle_packet_to_buffer_insertion(self, packet, link, dropped_packets, global_time, next_hop):
         """
-        Function takes the given packet, converts it into an event, and adds it to the
-        link's buffer. If the packet is not able to be added to the buffer, it
-        will be dropped.
+        Handles the insertion of the given packet into the link's buffer. If the packet is not 
+        able to be added to the buffer, it will be dropped.
         """
         print 'Insert packet into buffer..'
-        print 'Curr loc', curr_packet.get_curr_loc()
+        print 'Curr loc', packet.get_curr_loc()
         print 'Nxt:', next_hop
-        assert curr_packet.get_curr_loc() == next_hop.get_ip()
+
+        assert packet.get_curr_loc() == next_hop.get_ip()
+        assert packet.get_type() in [MESSAGE_PACKET, ACK_PACKET, ROUTER_PACKET] 
 
         # Insert packet into buffer
-        if next_link.insert_into_buffer(curr_packet):
-            # if len(next_link.packet_queue) == 1:
-            #     print 'Creating received event from top element of queue'
-            #     next_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
-
-            #     self.ec.create_packet_received_event(global_time, curr_packet, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
+        if link.insert_into_buffer(packet):
             return True
         else:
-            dropped_packets.append(curr_packet)
-            next_link.increment_drop_packets()
+            dropped_packets.append(packet)
+            link.increment_drop_packets()
             return False
 
-    def insert_routing_packet_into_buffer(self, routing_pkt, next_link, dropped_packets, global_time, next_hop):
-        """
-        Function takes the given packet, converts it into an event, and adds it to the
-        link's buffer. If the packet is not able to be added to the buffer, it
-        will be dropped.
-        """
-        assert routing_pkt.get_dest() == None
-        assert routing_pkt.get_type() == ROUTER_PACKET
 
-        # Insert packet into buffer
-        if next_link.insert_into_buffer(routing_pkt):
-            return True
-            # if len(next_link.packet_queue) == 1:
-            #     self.ec.create_routing_packet_received_event(global_time, routing_pkt, next_link, next_link.get_link_endpoint(next_hop).get_ip(), next_hop.get_ip())
+    def insert_packet_into_buffer(self, link, curr_router, next_hop, packet, dropped_packets, global_time):
+        """
+        Takes any type of packet and inserts it into the buffer. Creates a remove_from_buffer_event
+        indicating the time when packet should be removed.
+        """
+        src1_ip = curr_router.get_ip()
+        src2_ip = next_hop.get_ip()
+
+        assert src1_ip != src2_ip
+        assert packet.get_type() in [MESSAGE_PACKET, ACK_PACKET, ROUTER_PACKET] 
+        assert (packet.get_dest() == None) if packet.get_type() == ROUTER_PACKET else True
+
+        if len(link.packet_queue) == 0:
+            if link.get_direction() == (src1_ip, src2_ip):
+                # Insert packet into the next link's buffer
+                if self.handle_packet_to_buffer_insertion(packet, link, dropped_packets, global_time, next_hop):
+                    self.ec.create_remove_from_buffer_event(global_time, packet, src1_ip, src2_ip)
+            elif link.get_direction() == (src2_ip, src1_ip):
+                if self.handle_packet_to_buffer_insertion(packet, link, dropped_packets, global_time, next_hop):
+                    next_time = max(link.get_last_pkt_dest_time(), global_time)
+                    self.ec.create_remove_from_buffer_event(next_time, packet, src2_ip, src1_ip)
+            else:
+                print "link: ", link
+                print "Direction: ", link.get_direction()
+                print "Curr: ", (src1_ip, src2_ip)
+                assert False
         else:
-            dropped_packets.append(routing_pkt)
-            next_link.increment_drop_packets()
-            return False
+            self.handle_packet_to_buffer_insertion(packet, link, dropped_packets, global_time, next_hop)
+
 
     def process_remove_from_buffer_event(self, event_top, global_time):
         curr_link = self.get_link_from_event(event_top, self.links)
@@ -152,24 +160,7 @@ class EventProcessor:
             assert routing_pkt.get_src() in hosts
             new_pkt = Packet(ROUTER_PACKET, new_weight, routing_pkt.get_src(), None, dest.get_ip(), None)
 
-            if len(l.packet_queue) == 0:
-                if l.get_direction() == (curr_router, dest.get_ip()):
-                    # Insert packet into the next link's buffer
-                    if self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest):
-                        self.ec.create_remove_from_buffer_event(global_time, new_pkt, curr_router, dest.get_ip())
-                elif l.get_direction() == (dest.get_ip(), curr_router):
-                    if self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest):
-                        next_time = max(l.get_last_pkt_dest_time(), global_time)
-                        self.ec.create_remove_from_buffer_event(next_time, new_pkt, dest.get_ip(), curr_router)
-                else:
-                    print "link: ", l
-                    print "Direction: ", l.get_direction()
-                    print "Curr: ", (curr_router, dest.get_ip())
-                    assert False
-            else:
-                self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
-            # self.insert_routing_packet_into_buffer(new_pkt, l, dropped_packets, global_time, dest)
-
+            self.insert_packet_into_buffer(l, routers[curr_router], dest, new_pkt, dropped_packets, global_time)
 
     def process_packet_received_event(self, event_top, global_time, links, routers, hosts, dropped_packets, acknowledged_packets, window_size_dict, network):
         # Retrieve the previous link and remove the received
@@ -193,22 +184,8 @@ class EventProcessor:
             next_link = curr_router.get_link_for_dest(next_hop)
             curr_packet.set_curr_loc(next_hop.get_ip())
 
-            if len(next_link.packet_queue) == 0:
-                if next_link.get_direction() == (curr_router.get_ip(), next_hop.get_ip()):
-                    # Insert packet into the next link's buffer
-                    if self.insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_time, next_hop):
-                        self.ec.create_remove_from_buffer_event(global_time, curr_packet, curr_router.get_ip(), next_hop.get_ip())
-                elif next_link.get_direction() == (next_hop.get_ip(), curr_router.get_ip()):
-                    if self.insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_time, next_hop):
-                        next_time = max(next_link.get_last_pkt_dest_time(), global_time)
-                        self.ec.create_remove_from_buffer_event(next_time, curr_packet, next_hop.get_ip(), curr_router.get_ip())
-                else:
-                    print "link: ", next_link
-                    print "Direction: ", next_link.get_direction()
-                    print "Curr: ", (curr_router.get_ip(), next_hop.get_ip())
-                    assert False
-            else:
-                self.insert_packet_into_buffer(curr_packet, next_link, dropped_packets, global_time, next_hop)
+            self.insert_packet_into_buffer(next_link, curr_router, next_hop, curr_packet, dropped_packets, global_time)
+
 
         # Host receives a packet
         elif curr_packet.get_curr_loc() in hosts:
@@ -325,14 +302,14 @@ class EventProcessor:
                 #         if len(next_link.packet_queue) == 0:
                 #             if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
                 #                 # Insert packet into the next link's buffer
-                #                 if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #                 if self.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                 #                     self.ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
                 #                     curr_host.set_window_count(curr_host.get_window_count()+1)
                 #                 else:
                 #                     break
                 #                 #     assert False
                 #             elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
-                #                 if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #                 if self.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                 #                     next_time = max(next_link.get_last_pkt_dest_time(), global_time)
                 #                     self.ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
                 #                     curr_host.set_window_count(curr_host.get_window_count()+1)
@@ -342,7 +319,7 @@ class EventProcessor:
                 #             else:
                 #                 assert False
                 #         else:
-                #             if self.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #             if self.handle_packet_to_buffer_insertion(pkt, next_link, dropped_packets, global_time, next_dest):
                 #                 curr_host.set_window_count(curr_host.get_window_count()+1)
                 #             else:
                 #                 break
@@ -375,19 +352,8 @@ class EventProcessor:
                 p.set_packet_id(curr_packet.get_packet_id())
                 next_hop = next_dest
 
-                if len(next_link.packet_queue) == 0:
-                    if next_link.get_direction() == (curr_host.get_ip(), next_hop.get_ip()):
-                        # Insert packet into the next link's buffer
-                        if self.insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_hop):
-                            self.ec.create_remove_from_buffer_event(global_time, p, curr_host.get_ip(), next_hop.get_ip())
-                    elif next_link.get_direction() == (next_hop.get_ip(), curr_host.get_ip()):
-                        if self.insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_hop):
-                            next_time = max(next_link.get_last_pkt_dest_time(), global_time)
-                            self.ec.create_remove_from_buffer_event(next_time, p, next_hop.get_ip(), curr_host.get_ip())
-                    else:
-                        assert False
-                else:
-                    self.insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_hop)
+                # Insert ack packet into buffer
+                self.insert_packet_into_buffer(next_link, curr_host, next_hop, p, dropped_packets, global_time)
 
 
                 # last_recv_pkt = curr_host.get_last_received_pkt_id()
@@ -408,7 +374,7 @@ class EventProcessor:
                 #         p.set_packet_id(exp_packet_id - 1)
                 #         print p
                 #         # Insert ack packet into the buffer
-                #         self.insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
+                #         self.handle_packet_to_buffer_insertion(p, next_link, dropped_packets, global_time, next_dest)
                 #         # exit(1)
                 #     # exit(1)
                 # else:
@@ -417,7 +383,7 @@ class EventProcessor:
                 #     # p.set_packet_id(curr_packet.get_packet_id())
 
                 #     # # Insert ack packet into the buffer
-                #     # insert_packet_into_buffer(p, next_link, dropped_packets, global_time, next_dest)
+                #     # handle_packet_to_buffer_insertion(p, next_link, dropped_packets, global_time, next_dest)
 
                 #     # Add it to the received packet list
                 #     curr_host.insert_recv_pkt(curr_packet)
@@ -458,21 +424,8 @@ class EventProcessor:
             p.set_packet_id(curr_packet.get_packet_id())
             dropped_packets.append(p)
 
-            # Attempt to insert new packet back to buffer
-            # self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
-            if len(curr_link.packet_queue) == 0:
-                if curr_link.get_direction() == (curr_host.get_ip(), next_hop.get_ip()):
-                    # Insert packet into the next link's buffer
-                    if self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop):
-                        self.ec.create_remove_from_buffer_event(global_time, p, curr_host.get_ip(), next_hop.get_ip())
-                elif curr_link.get_direction() == (next_hop.get_ip(), curr_host.get_ip()):
-                    if self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop):
-                        next_time = max(curr_link.get_last_pkt_dest_time(), global_time)
-                        self.ec.create_remove_from_buffer_event(next_time, p, next_hop.get_ip(), curr_host.get_ip())
-                else:
-                    assert False
-            else:
-                self.insert_packet_into_buffer(p, curr_link, dropped_packets, global_time, next_hop)
+            # Insert resend packet into buffer
+            self.insert_packet_into_buffer(curr_link, curr_host, next_hop, p, dropped_packets, global_time)
 
             # if curr_link.insert_into_buffer(p, p.get_capacity()):
             #     if len(curr_link.packet_queue) == 1:
