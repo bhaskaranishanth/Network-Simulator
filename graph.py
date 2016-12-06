@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt 
 import numpy as np 
-def pck_tot_buffers(time, links):
-    all_points = []
+def pck_tot_buffers(pck_graph_dict, time, links):
     for link_id in links.keys():
         link = links[link_id]
-        all_points.append([link_id, time, link.get_num_packets()])
-    return all_points
+        if pck_graph_dict.get(link_id) == None:
+            pck_graph_dict[link_id] = []
+        pck_graph_dict[link_id].append([time, link.get_num_packets()])
 
 def drop_packets(time, links):
     drop_packets_list = []
@@ -118,41 +118,20 @@ def graph_pck_drop_rate(drop_packets):
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
-def graph_pck_buf(points):
-    # x_coord = []
-    # y_coord = []
-    # max_y = -1000000000000
-    # max_x = -1000000000000
-    # for i in range(len(points)):
-    #     x_coord.append(points[i][0])
-    #     y_coord.append(points[i][1])
-    #     if points[i][1] > max_y:
-    #         max_y = points[i][1]
-    #     if points[i][0] > max_x:
-    #         max_x = points[i][0]
-
-    # num_links = len(points[0])
-    # num_times = len(points)
-    # x_coord = [] 
-    # for i in range(len(points)):
-    #     x_coord.append(points[i][0][1])
-
-    # y_coord = np.zeros((num_links, num_times))
-    # for i in range(len(num_links)):
-    #     for j in range(len(num_times)):
-    #         y_coord[i][j] = points[j][i][2]
-
+def graph_pck_buf(pck_graph_dict):
     lines = []
-    for i in range(0, len(points[0]), 1):
+    for key,value in pck_graph_dict.iteritems():
 
-        x = [elem[0][1] for elem in points][0:len(points):500]
-        y = [elem[i][2] for elem in points][0:len(points):500]
+        x = [elem[0] for elem in value]
+        y = [elem[1] for elem in value]
+        # x = [elem[0] for elem in value][0:len(points):500]
+        # y = [elem[1] for elem in value][0:len(points):500]
 
-        if points[0][i][0] in ['L2', 'L1']:
-            line_up, = plt.plot(x, y, linewidth = 2.0, label = points[0][i][0])
+        if key in ['L1', 'L2']:
+            line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
             lines.append(line_up)
 
-    plt.ylabel("Packets In Buffer")
+    plt.ylabel("Buffer Occupancy")
     plt.xlabel("Time")
     plt.legend()
     #plt.axis([0,max_x, 0, max_y * 2])

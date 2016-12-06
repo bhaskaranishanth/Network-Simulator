@@ -154,7 +154,7 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                if count == 700:
+                if count == 100:
                     break
 
     def process_input(self):
