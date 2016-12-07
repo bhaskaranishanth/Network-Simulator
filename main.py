@@ -38,7 +38,9 @@ def store_flow_rate(flow_rate_dict, hosts, global_time):
             # store_link_rate(link_rate_dict, links, global_time)
 
 def store_link_rate(link_rate_dict, links, global_time):
-    for l in ['L1', 'L2']:
+    # for l in ['L1', 'L2', 'L3']:
+    # for l in ['L1', 'L2']:
+    for l in ['L1']:
         prev = 0
         if len(link_rate_dict[l]) != 0:
             prev = links[l].prev

@@ -1,4 +1,4 @@
-ext = '2'
+ext = '0'
 
 HOST_FILE = './conf/host' + ext + '.conf'
 ROUTER_FILE = './conf/router' + ext + '.conf'

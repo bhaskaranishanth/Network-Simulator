@@ -88,6 +88,9 @@ class EventProcessor:
         curr_link = self.get_link_from_event(event_top, self.links)
         assert len(curr_link.packet_queue) > 0
         curr_packet = event_top.get_data()
+        print "current packet", curr_packet
+        print "curr link", curr_link.packet_queue[0]
+        # curr_link.print_link_buffer()
         assert curr_packet == curr_link.packet_queue[0]
         curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
         assert curr_packet.get_packet_id() != 0

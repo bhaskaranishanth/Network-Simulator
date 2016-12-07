@@ -73,7 +73,7 @@ class NetworkSystem:
             for i, p in enumerate(link.packet_queue):
                 # Creates timeout event
                 self.ec.create_timeout_event(TIMEOUT_VAL + p.get_init_time(), p)
-            if len(link.packet_queue) > 0:
+            if len(link.packet_queue) > 0 and h.get_ip() == p.get_src():
                 # Create the first packet received event
                 # TODO: possibly remove the packet from the buffer?
                 p = link.packet_queue[0]
@@ -154,10 +154,10 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-            #     if count == 100:
+            #     if count == 1000:
             #         break
 
-            # if count == 100:
+            # if count == 1000:
             #     break
 
         # print "Host: oustanding pkts", self.hosts["S2"].get_outstanding_pkts()
