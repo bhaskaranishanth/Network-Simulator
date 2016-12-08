@@ -412,7 +412,7 @@ class EventProcessor:
         #         assert acknowledged_packets[p_id] > 0
         if p_id not in acknowledged_packets:
             # print 'Creating timeout packet'
-            if not curr_host.get_tcp():
+            if curr_host.get_is_reno():
                 curr_host.set_threshold(curr_host.get_window_size() / 2.0)
                 curr_host.set_window_size(1)
                 print "window size 3: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())

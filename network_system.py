@@ -135,7 +135,8 @@ class NetworkSystem:
         base_rtt_table = self.get_base_RTT()
         print base_rtt_table
         for _, h in self.hosts.iteritems():
-            h.set_base_RTT(float('inf'))
+            h.set_base_RTT(float(10**10))
+            # h.set_base_RTT(float('inf'))
 
 
 
@@ -145,7 +146,7 @@ class NetworkSystem:
             event_list = []
             # count = 0
             curr_host = self.hosts[self.flows[key].get_src()]
-            curr_host.set_tcp(self.flows[key].get_tcp())
+            curr_host.set_tcp(self.flows[key].get_tcp_val())
             curr_host.set_flow_id(key)
 
             for packet in self.flows[key].gen_packets():
@@ -154,7 +155,7 @@ class NetworkSystem:
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                # if count == 1000:
+                # if count == 10:
                 #     break
 
     def process_input(self):

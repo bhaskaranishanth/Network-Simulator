@@ -101,7 +101,7 @@ class EventCreator:
                 # create_packet_received_event(global_time, next_packet, curr_link, curr_src, next_dest)
 
     def create_update_window_event(self, curr_host, time):
-        assert curr_host.is_fast
+        assert curr_host.get_is_reno() or curr_host.get_is_fast() or curr_host.get_is_cubic()
         update_window_event = Event(UPDATE_WINDOW, time, curr_host.get_ip(), None, None)
         self.eq.put((update_window_event.get_initial_time(), update_window_event))
 

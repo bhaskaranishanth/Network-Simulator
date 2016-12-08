@@ -59,8 +59,8 @@ def smooth_avg_list(x, y, avg_time):
             temp_y.append(y[i])
             i += 1
         current_time += avg_time
-        avg_x.append(sum(temp_x)/float(len(temp_x)))
-        avg_y.append(sum(temp_y)/float(len(temp_y)))
+        avg_x.append(sum(temp_x)/float(len(temp_x) + 1))
+        avg_y.append(sum(temp_y)/float(len(temp_y) + 1))
 
     return avg_x, avg_y
 
@@ -122,7 +122,7 @@ def graph_flow_rate(flow_rate_dict):
 
 
 def graph_link_rate(link_rate_dict):
-    for key in link_rate_dict:
+    for key in ['L1', 'L2', 'L3']:
         link_rate_list = link_rate_dict[key]
         lines = []
         x = [elem[0] for elem in link_rate_list]
@@ -186,8 +186,8 @@ def graph_pck_buf(pck_graph_dict):
                 temp_y.append(y[i])
                 i += 1
             current_time += avg_time
-            avg_x.append(sum(temp_x)/float(len(temp_x)))
-            avg_y.append(sum(temp_y)/float(len(temp_y)))
+            avg_x.append(sum(temp_x)/float(len(temp_x) + 1))
+            avg_y.append(sum(temp_y)/float(len(temp_y) + 1))
 
 
         if key in ['L1', 'L2']:

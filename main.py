@@ -38,7 +38,7 @@ def store_flow_rate(flow_rate_dict, hosts, global_time):
             # store_link_rate(link_rate_dict, links, global_time)
 
 def store_link_rate(link_rate_dict, links, global_time):
-    for l in ['L1', 'L2']:
+    for l in link_rate_dict:
         prev = 0
         if len(link_rate_dict[l]) != 0:
             prev = links[l].prev
@@ -105,7 +105,6 @@ if __name__ == '__main__':
             window_size_dict[f_id] = []
             packet_delay_dict[f_id] = []
             flow_rate_dict[f_id] = []
-        if h.get_tcp():
             ec.create_update_window_event(h, PERIODIC_FAST_INTERVAL)
     
     for l in links:
@@ -126,9 +125,12 @@ if __name__ == '__main__':
         event_type = event_top.get_type()
 
 
-        # for h in hosts:
-        #     print "Host Window count:", hosts[h].get_window_count()
-        #     print "Host Window size:", hosts[h].get_window_size()
+        for h in hosts:
+            print "Host Window id: ", h
+            print "Host Window count:", hosts[h].get_window_count()
+            print "Host Window size:", hosts[h].get_window_size()
+            print "Host Window get_base_RTT: ", hosts[h].get_base_RTT()
+            print "Host Window get_last_RTT: ", hosts[h].get_last_RTT()
 
         # print "global time:", global_time
         # for l in links:
@@ -137,9 +139,6 @@ if __name__ == '__main__':
         #     print "Host Window Link id:", l
         #     print "Host Window Link size:", len(links[l].packet_queue)
 
-        if eq.qsize() > 19000:
-            exit(1)
-        # print 'Link 1 size: ', len(links['L1'].packet_queue)
         # print 'Link 1 capacity size: ', links['L1'].capacity
         # print 'Link 1 size: ', links['L1']
         # print 'Link 1 buf: ', links['L1'].buf
@@ -213,82 +212,80 @@ if __name__ == '__main__':
             ec.create_graph_event(global_time + GRAPH_EVENT_INTERVAL)
 
         elif event_type == UPDATE_WINDOW:
-            # Hackish solution to stop the program
-            # if eq.qsize() < 5:
-            #     break
-
-            # if eq.qsize() == 0:
-            #     break
-            # elif eq.qsize() == 1:
-            #     t, event_top = eq.get()
-            #     if event_top.get_type() == DYNAMIC_ROUTING:
-            #         break
-            #     else:
-            #         eq.put(t, event_top)
             curr_host = hosts[event_top.get_src()]
-            assert curr_host.is_fast
-            # Update window size 
-            # if curr_host in window_size_dict:
-            w = curr_host.get_window_size()
-            curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
-            print "changing window size:", curr_host.get_window_size()
-            window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+            if curr_host.get_is_fast():
+                # assert False
+                assert curr_host.is_fast
+                # Update window size 
+                # if curr_host in window_size_dict:
+                w = curr_host.get_window_size()
+                curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
+                print "changing window size:", curr_host.get_window_size()
+                window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+            elif curr_host.get_is_cubic():
+                K = (curr_host.window_size_max * BETA / float(C)) ** (1.0/3.0)
+                t = global_time - curr_host.last_congestion_time
+                window_new = C * (t - K)**3 + curr_host.window_size_max
+                if window_new < curr_host.get_window_size():
+                    curr_host.last_congestion_time = global_time
+                    curr_host.window_size_max = curr_host.get_window_size()
+                curr_host.set_window_size(window_new)
+            else:
+                assert False
 
             ec.create_update_window_event(curr_host, global_time + PERIODIC_FAST_INTERVAL)
-
-
             network.populate_packets_into_buffer(curr_host, global_time, dropped_packets)
 
-            # while curr_host.get_window_count() < curr_host.get_window_size():
-            #     pkt = curr_host.remove_packet()
-            #     # if pkt.packet_id == 9000:
-            #     #     print 'Host Window Reached here'
-            #     #     exit(1)
-            #     next_link = curr_host.get_link()
-            #     next_dest = next_link.get_link_endpoint(curr_host)
-            #     if pkt != None:
-            #         assert pkt.get_curr_loc() != None
-            #         ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
-            #         if len(next_link.packet_queue) == 0:
-            #             if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
-            #                 # Insert packet into the next link's buffer
-            #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
-            #                     ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
-            #                     curr_host.set_window_count(curr_host.get_window_count()+1)
-            #                 else:
-            #                     break
-            #             elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
-            #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
-            #                     next_time = max(next_link.get_last_pkt_dest_time(), global_time)
-            #                     ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
-            #                     curr_host.set_window_count(curr_host.get_window_count()+1)
-            #                 else:
-            #                     break
-            #             else:
-            #                 assert False
-            #         else:
-            #             if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
-            #                 curr_host.set_window_count(curr_host.get_window_count()+1)
-            #             else:
-            #                 # TODO
-            #                 break
+                # while curr_host.get_window_count() < curr_host.get_window_size():
+                #     pkt = curr_host.remove_packet()
+                #     # if pkt.packet_id == 9000:
+                #     #     print 'Host Window Reached here'
+                #     #     exit(1)
+                #     next_link = curr_host.get_link()
+                #     next_dest = next_link.get_link_endpoint(curr_host)
+                #     if pkt != None:
+                #         assert pkt.get_curr_loc() != None
+                #         ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
+                #         if len(next_link.packet_queue) == 0:
+                #             if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
+                #                 # Insert packet into the next link's buffer
+                #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #                     ec.create_remove_from_buffer_event(global_time, pkt, curr_host.get_ip(), next_dest.get_ip())
+                #                     curr_host.set_window_count(curr_host.get_window_count()+1)
+                #                 else:
+                #                     break
+                #             elif next_link.get_direction() == (next_dest.get_ip(), curr_host.get_ip()):
+                #                 if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #                     next_time = max(next_link.get_last_pkt_dest_time(), global_time)
+                #                     ec.create_remove_from_buffer_event(next_time, pkt, next_dest.get_ip(), curr_host.get_ip())
+                #                     curr_host.set_window_count(curr_host.get_window_count()+1)
+                #                 else:
+                #                     break
+                #             else:
+                #                 assert False
+                #         else:
+                #             if ep.insert_packet_into_buffer(pkt, next_link, dropped_packets, global_time, next_dest):
+                #                 curr_host.set_window_count(curr_host.get_window_count()+1)
+                #             else:
+                #                 # TODO
+                #                 break
 
 
-            #         # if next_link.insert_into_buffer(pkt):
-            #         #     curr_host.set_window_count(curr_host.get_window_count()+1)
-            #         #     if len(next_link.packet_queue) == 1:
-            #         #         next_link.remove_from_buffer(pkt, pkt.get_capacity())
+                #         # if next_link.insert_into_buffer(pkt):
+                #         #     curr_host.set_window_count(curr_host.get_window_count()+1)
+                #         #     if len(next_link.packet_queue) == 1:
+                #         #         next_link.remove_from_buffer(pkt, pkt.get_capacity())
 
-            #         #         self.ec.create_packet_received_event(global_time, pkt, next_link, curr_host.get_ip(), next_dest.get_ip())
+                #         #         self.ec.create_packet_received_event(global_time, pkt, next_link, curr_host.get_ip(), next_dest.get_ip())
 
-            #         #     dst_time = global_time + TIMEOUT_VAL
-            #         #     self.ec.create_timeout_event(dst_time, pkt, global_time)
-            #         # else:
-            #         #     # Put the packet back into the host queue
-            #         #     curr_host.insert_packet(pkt)
-            #         #     break
-            #     else:
-            #         break
+                #         #     dst_time = global_time + TIMEOUT_VAL
+                #         #     self.ec.create_timeout_event(dst_time, pkt, global_time)
+                #         # else:
+                #         #     # Put the packet back into the host queue
+                #         #     curr_host.insert_packet(pkt)
+                #         #     break
+                #     else:
+                #         break
 
         else:
             print "event type", event_type
@@ -319,10 +316,10 @@ if __name__ == '__main__':
     # print 'This is dropped: ', dropped_packets
     # print 'This is dropped graph: ', packet_loss_dict['L5']
     # print 'This is dropped graph: ', pck_drop_graph
+    graph_window_size(window_size_dict)
     graph_link_rate(link_rate_dict)
     graph_packet_loss(packet_loss_dict)
     # exit(1)
     graph_flow_rate(flow_rate_dict)
     graph_pck_buf(pck_graph_dict)
-    graph_window_size(window_size_dict)
     graph_packet_delay(packet_delay_dict)
