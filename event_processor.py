@@ -210,6 +210,7 @@ class EventProcessor:
 
             # Acknowledgment packet received
             if curr_packet.get_type() == ACK_PACKET:
+                print "new fast 2", curr_packet.get_packet_id()
                 print 'Acknowledged this shit'
 
                 RTT = global_time - curr_packet.get_init_time()
@@ -218,44 +219,116 @@ class EventProcessor:
                 curr_host.set_last_RTT(RTT)
                 print "changing window size base RTT", curr_host.get_base_RTT()
                 print "changing window size last RTT", curr_host.get_last_RTT()
-                if not curr_host.get_tcp():
-                    print "performing Reno"
-                    # exit(1)
-                    if curr_host.get_window_size() < curr_host.get_threshold():
-                        curr_host.set_window_size(curr_host.get_window_size() + 1.0)
-                    else:
-                        curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
-                    print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
 
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+                # Performing Reno
+                if not curr_host.get_tcp():
+                    # Duplicate acks
+                    if curr_packet.get_packet_id() in acknowledged_packets:
+                        acknowledged_packets[curr_packet.get_packet_id()] += 1
+                        # assert curr_packet.get_actual_id() not in acknowledged_packets
+                        if curr_packet.get_packet_id() != curr_packet.get_actual_id():
+                            acknowledged_packets[curr_packet.get_actual_id()] = 1
 
-                # Insert acknowledgement into dictionary
-
-                curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
-                if curr_packet.get_packet_id() in acknowledged_packets:
-                    acknowledged_packets[curr_packet.get_packet_id()] += 1
-                    if not curr_host.get_tcp():
-                        print "performing Reno2"
-                        # exit(1)
-                        # print "exp_packe Location 1: ", acknowledged_packets[curr_packet.get_packet_id()], " and id: ", curr_packet.get_packet_id()
-                        # if acknowledged_packets[curr_packet.get_packet_id()] > 3:
-                            # acknowledged_packets[curr_packet.get_packet_id()] = -3
-                        assert curr_packet.get_packet_id() != 0
+                        # If loss detected from duplicate acks
                         if acknowledged_packets[curr_packet.get_packet_id()] == 4:
-
-                            # Change window and threshold to w/2 
-                            # print "exp_packe before: ", curr_host.get_window_size()
-
-                            curr_host.set_window_size(curr_host.get_window_size() / 2.0)
-                            # print "exp_packe after: ", curr_host.get_window_size()
-                            curr_host.set_threshold(curr_host.get_window_size())
-                            # print "window size 2:", curr_host.get_window_size()
-
-                            p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
+                            # Retransmit
+                            next_link = curr_host.get_link()
+                            next_hop = next_link.get_link_endpoint(curr_host)
+                            p = Packet(MESSAGE_PACKET, 1, curr_packet.get_dest(), curr_packet.get_src(), next_hop.get_ip(), global_time)
                             p.set_packet_id(curr_packet.get_packet_id() + 1)
+                            p.set_actual_id(curr_packet.get_packet_id() + 1)
+                            self.insert_packet_into_buffer(next_link, curr_host, next_hop, p, dropped_packets, global_time)
 
+                            # Enter fast recovery
+                            assert curr_host.get_fast_recovery() == 0
+                            curr_host.set_fast_recovery(1)
+
+                            # Change threshold and window size
+                            curr_host.set_threshold(curr_host.get_window_size() / 2.0)
+                            curr_host.set_window_size(curr_host.get_window_size() / 2.0 + 3)
+
+                        elif acknowledged_packets[curr_packet.get_packet_id()] > 4:
+                            curr_host.set_window_size(curr_host.get_window_size() + 1.0)
+                    
+                        # curr_host.del_outstanding_pkt(curr_packet.get_actual_id())
+
+                    # Take care of acks for new packets
+                    else:
+                        assert curr_packet.get_packet_id() == curr_packet.get_actual_id()
+                        curr_host.set_window_count(curr_host.get_window_count() - 1)
+                        acknowledged_packets[curr_packet.get_actual_id()] = 1
+                        
+                        # Stop fast recovery (received missing packet)
+                        if curr_host.get_fast_recovery():
+                            curr_host.set_fast_recovery(0)
+                            print "fast recovery packet id:", curr_packet.get_packet_id()
+                            print "fast recovery outstanding pkts", curr_host.get_outstanding_pkts()
+                            print "fast recovery", curr_host.print_queue()
+                            # assert curr_packet.get_packet_id() == curr_host.get_outstanding_pkts()[0]
+                            curr_host.set_window_size(curr_host.get_threshold())
+                            # TODO: Set B's expected packet to the next missing packet
+                            # Maybe don't need to do this?
+
+                        # If not in fast recovery, reset window size according to SS/CA
+                        else:
+                            w = curr_host.get_window_size()
+                            if w > curr_host.get_threshold():
+                                curr_host.set_window_size(w + 1.0 / w)
+                            else:
+                                curr_host.set_window_size(w + 1.0)
+
+                    print "new fast 4", curr_packet.get_actual_id()
+                    if curr_packet.get_actual_id() in curr_host.get_outstanding_pkts():
+                        curr_host.del_outstanding_pkt(curr_packet.get_actual_id())
 
                     window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
+
+                network.populate_packets_into_buffer(curr_host, global_time, dropped_packets)
+
+                
+
+                #     print "performing Reno"
+                #     # exit(1)
+                #     if curr_host.get_window_size() < curr_host.get_threshold():
+                #         curr_host.set_window_size(curr_host.get_window_size() + 1.0)
+                #     else:
+                #         curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
+                #     print "window size 1: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
+
+
+                # # Insert acknowledgement into dictionary
+
+                # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
+                # if curr_packet.get_packet_id() in acknowledged_packets:
+                #     acknowledged_packets[curr_packet.get_packet_id()] += 1
+                #     if not curr_host.get_tcp():
+                #         print "performing Reno2"
+                #         # exit(1)
+                #         # print "exp_packe Location 1: ", acknowledged_packets[curr_packet.get_packet_id()], " and id: ", curr_packet.get_packet_id()
+                #         if acknowledged_packets[curr_packet.get_packet_id()] < 3:
+
+
+                #         if acknowledged_packets[curr_packet.get_packet_id()] > 3:
+                #             # acknowledged_packets[curr_packet.get_packet_id()] = -3
+                #             assert curr_packet.get_packet_id() != 0
+                #             if acknowledged_packets[curr_packet.get_packet_id()] < 4:
+                #                 curr_host.set_window_size(curr_host.get_window_size() + 1)
+                #             elif acknowledged_packets[curr_packet.get_packet_id()] == 4:
+
+                #                 # Change window and threshold to w/2 
+                #                 # print "exp_packe before: ", curr_host.get_window_size()
+
+                #                 curr_host.set_window_size(curr_host.get_window_size() / 2.0)
+                #                 # print "exp_packe after: ", curr_host.get_window_size()
+                #                 curr_host.set_threshold(curr_host.get_window_size())
+                #                 # print "window size 2:", curr_host.get_window_size()
+
+                #                 p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
+                #                 p.set_packet_id(curr_packet.get_packet_id() + 1)
+
+
+                #     window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
                     #         # exit(1)
 
                     #         print "threshold:", curr_host.get_threshold()
@@ -293,32 +366,31 @@ class EventProcessor:
                         # else:
                         #     curr_host.set_window_size(curr_host.get_window_size() + 1)
 
-                else:
-                    # Store ack packet id for the first time
-                    acknowledged_packets[curr_packet.get_packet_id()] = 1
-                    # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
-                    # print "exp_packe t waht, "
+                # else:
+                #     # Store ack packet id for the first time
+                #     acknowledged_packets[curr_packet.get_packet_id()] = 1
+                #     # curr_host.set_bytes_received(curr_host.get_bytes_received() + MESSAGE_SIZE)
+                #     # print "exp_packe t waht, "
 
-                     # for h in hosts:
-                    #     if curr_packet.get_packet_id() in hosts[h].get_outstanding_pkts():
-                    #         hosts[h].del_outstanding_pkt(curr_packet.get_packet_id())
-                    #         rand_host = hosts[h]
-                    #         break
-                    # print "Host: ", curr_host.get_outstanding_pkts()
-                    print "Host: id ", curr_packet.get_packet_id()
-                    print "Host:", curr_host
-                    curr_host.del_outstanding_pkt(curr_packet.get_packet_id())
+                #      # for h in hosts:
+                #     #     if curr_packet.get_packet_id() in hosts[h].get_outstanding_pkts():
+                #     #         hosts[h].del_outstanding_pkt(curr_packet.get_packet_id())
+                #     #         rand_host = hosts[h]
+                #     #         break
+                #     # print "Host: ", curr_host.get_outstanding_pkts()
+                #     print "Host: id ", curr_packet.get_packet_id()
+                #     print "Host:", curr_host
+                #     curr_host.del_outstanding_pkt(curr_packet.get_packet_id())
 
-                    # if curr_host.flow_done():
-                    #     curr_host.set
-                    curr_host.set_window_count(curr_host.get_window_count() - 1)
+                #     # if curr_host.flow_done():
+                #     #     curr_host.set
+                #     curr_host.set_window_count(curr_host.get_window_count() - 1)
 
                     # exit(1)
 
                 # Convert packet from host queue into event and insert into buffer
                 # if curr_host.get_window_count() < curr_host.get_window_size():
 
-                network.populate_packets_into_buffer(curr_host, global_time, dropped_packets)
 
                 # while curr_host.get_window_count() < curr_host.get_window_size():
                 #     pkt = curr_host.remove_packet()
@@ -373,17 +445,34 @@ class EventProcessor:
                 print 'Received host'
                 print 'Running...'
 
-                # Create acknowlegment packet with same packet id as the original packet
+                last_recv_pkt = curr_host.get_last_received_pkt_id()
+                print 'Reno last received: ', last_recv_pkt
+                exp_packet_id = hosts[curr_packet.get_src()].get_outstanding_pkts()[0] if last_recv_pkt == None else (last_recv_pkt + 1)
+                print 'Reno packet id: ', exp_packet_id
+                
+                # Create acknowlegment packet with packet ID with expected packet ID
+                # or expected ID - 1 (if missing)
                 p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
-                p.set_packet_id(curr_packet.get_packet_id())
+                
+                if exp_packet_id == curr_packet.get_packet_id():
+                    p.set_packet_id(exp_packet_id)
+                    curr_host.set_last_received_pkt_id(curr_packet.get_packet_id())
+                else:
+                    p.set_packet_id(exp_packet_id - 1)
+
+                print "new fast 3", exp_packet_id - 1
+                # assert p.get_packet_id() == curr_packet.get_actual_id()
+                # print "new fast ", exp_packet_id
+
+                # Set packet's actual ID
+                p.set_actual_id(curr_packet.get_actual_id())
+
                 next_hop = next_dest
 
                 # Insert ack packet into buffer
                 self.insert_packet_into_buffer(next_link, curr_host, next_hop, p, dropped_packets, global_time)
 
 
-                last_recv_pkt = curr_host.get_last_received_pkt_id()
-                exp_packet_id = hosts[curr_packet.get_src()].get_outstanding_pkts()[0] if last_recv_pkt == None else (last_recv_pkt + 1)
                 assert exp_packet_id != None
                 # exp_packet_id = 1 if last_recv_pkt == None else (last_recv_pkt + 1)
                 # print "new pkt: ", p
@@ -391,24 +480,24 @@ class EventProcessor:
                 print "exp_packet_id: ", exp_packet_id, " curr_packet_id: ", curr_packet.get_packet_id()
 
                 # Update the received packets and missing packets list in the host
-                if exp_packet_id != curr_packet.get_packet_id():
+                # if exp_packet_id == curr_packet.get_packet_id():
                     # Takes care of packets sent by timeouts
-                    if curr_packet.get_packet_id() not in curr_host.get_received_pkt_ids():
-                        assert(exp_packet_id < curr_packet.get_packet_id())
-                        print "Invalid packet ids received"
-                        print "Expected id: ", exp_packet_id
-                        print "Current id: ", curr_packet.get_packet_id()
-                        p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
-                        p.set_packet_id(exp_packet_id - 1)
-                        print "exp_id: ", exp_packet_id
-                        assert p.get_packet_id() != 0
+                #     if curr_packet.get_packet_id() not in curr_host.get_received_pkt_ids():
+                #         assert(exp_packet_id < curr_packet.get_packet_id())
+                #         print "Invalid packet ids received"
+                #         print "Expected id: ", exp_packet_id
+                #         print "Current id: ", curr_packet.get_packet_id()
+                #         # p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
+                #         # p.set_packet_id(exp_packet_id - 1)
+                #         print "exp_id: ", exp_packet_id
+                #         assert p.get_packet_id() != 0
 
-                        print p
-                        # Insert ack packet into the buffer
-                        self.handle_packet_to_buffer_insertion(p, next_link, dropped_packets, global_time, next_dest)
-                        # exit(1)
-                    # exit(1)
-                else:
+                #         print p
+                #         # Insert ack packet into the buffer
+                #         self.handle_packet_to_buffer_insertion(p, next_link, dropped_packets, global_time, next_dest)
+                #         # exit(1)
+                #     # exit(1)
+                # else:
                     # Create acknowlegment packet with same packet id as the original packet
                     # p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
                     # p.set_packet_id(curr_packet.get_packet_id())
@@ -417,15 +506,15 @@ class EventProcessor:
                     # handle_packet_to_buffer_insertion(p, next_link, dropped_packets, global_time, next_dest)
 
                     # Add it to the received packet list
-                    curr_host.insert_recv_pkt(curr_packet)
+                    # curr_host.insert_recv_pkt(curr_packet)
                     # Set the last packed received to be the packet id we added
-                    curr_host.set_last_received_pkt_id(curr_packet.get_packet_id())
+                    # curr_host.set_last_received_pkt_id(curr_packet.get_packet_id())
 
                     # Update the last received packet
                     # This newest one can be in the missing packets list
-                    curr_host.update_last_recv_pkt()
+                    # curr_host.update_last_recv_pkt()
 
-                    print "The last non-missing value is : ", curr_host.get_last_received_pkt_id()
+                    # print "The last non-missing value is : ", curr_host.get_last_received_pkt_id()
                     # print curr_host.get_received_pkt_ids()
 
 
@@ -455,6 +544,7 @@ class EventProcessor:
             # Create new packet
             p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), next_hop.get_ip(), global_time)
             p.set_packet_id(curr_packet.get_packet_id())
+            p.set_actual_id(curr_packet.get_actual_id())
             dropped_packets.append(p)
 
             # Insert resend packet into buffer

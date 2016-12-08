@@ -39,6 +39,7 @@ class Packet:
         # self.packet_id = id(self)
         self.packet_id = None
         self.init_time = init_time
+        self.actual_id = None
 
     def set_capacity(self):
         if self.type == MESSAGE_PACKET:
@@ -79,7 +80,14 @@ class Packet:
         return self.init_time
 
     def get_packet_id(self):
+        if self.type == MESSAGE_PACKET:
+            assert self.packet_id == self.actual_id
         return self.packet_id
+
+    def get_actual_id(self):
+        if self.type == MESSAGE_PACKET:
+            assert self.packet_id == self.actual_id
+        return self.actual_id
 
 
     """ ACCESSOR METHODS """
@@ -111,6 +119,10 @@ class Packet:
         assert type(id) == int
         self.packet_id = id
 
+    def set_actual_id(self, id):
+        assert type(id) == int
+        self.actual_id = id
+
     """ PRINT METHODS """
     def __str__(self):
         print "Printing Packet Details"
@@ -119,6 +131,7 @@ class Packet:
         print "Payload: ", self.payload
         print "Source: ", self.src
         print "Destination: ", self.dest
-        print "Current Location: ", self.curr_loc
-        print "Packet ID: ", self.packet_id
+        print "Current Location: fast recovery ", self.curr_loc
+        print "Packet ID: fast recovery ", self.packet_id
+        print "Actual Packet ID: fast recovery", self.actual_id
         return ""

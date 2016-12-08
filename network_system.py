@@ -151,14 +151,15 @@ class NetworkSystem:
             for packet in self.flows[key].gen_packets():
                 count += 1
                 packet.set_packet_id(count)
+                packet.set_actual_id(count)
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-            #     if count == 1000:
-            #         break
+                if count == 5000:
+                    break
 
             # if count == 1000:
-            #     break
+                # break
 
         # print "Host: oustanding pkts", self.hosts["S2"].get_outstanding_pkts()
 

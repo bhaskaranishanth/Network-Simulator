@@ -1,4 +1,4 @@
-ext = '0'
+ext = '1'
 
 HOST_FILE = './conf/host' + ext + '.conf'
 ROUTER_FILE = './conf/router' + ext + '.conf'
@@ -9,7 +9,7 @@ FLOW_FILE = './conf/flow' + ext + '.conf'
 TIMEOUT_VAL = 2
 ROUTING_INTERVAL = 60
 WINDOW_SIZE = 1
-THRESHOLD = 1000
+THRESHOLD = 100
 PERIODIC_FAST_INTERVAL = .1
 GRAPH_EVENT_INTERVAL = .1
 

@@ -66,8 +66,8 @@ def smooth_avg_list(x, y, avg_time):
 
 def graph_packet_loss(packet_loss_dict):
     # for key in ['L1', 'L2', 'L3']:
-    # for key in ['L1', 'L2']:
-    for key in ['L1']:
+    for key in ['L1', 'L2']:
+    # for key in ['L1']:
     # for key in packet_loss_dict:
         packet_loss_list = packet_loss_dict[key]
         lines = []
@@ -125,8 +125,8 @@ def graph_flow_rate(flow_rate_dict):
 
 def graph_link_rate(link_rate_dict):
     # for key in ['L1', 'L2', 'L3']:
-    # for key in ['L1', 'L2']:
-    for key in ['L1']:
+    for key in ['L1', 'L2']:
+    # for key in ['L1']:
         link_rate_list = link_rate_dict[key]
         lines = []
         x = [elem[0] for elem in link_rate_list]
@@ -195,8 +195,8 @@ def graph_pck_buf(pck_graph_dict):
 
 
         # if key in ['L1', 'L2', 'L3']:
-        # if key in ['L1', 'L2']:
-        if key in ['L1']:
+        if key in ['L1', 'L2']:
+        # if key in ['L1']:
             line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
             lines.append(line_up)
 

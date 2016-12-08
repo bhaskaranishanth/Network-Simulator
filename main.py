@@ -38,9 +38,9 @@ def store_flow_rate(flow_rate_dict, hosts, global_time):
             # store_link_rate(link_rate_dict, links, global_time)
 
 def store_link_rate(link_rate_dict, links, global_time):
-    # for l in ['L1', 'L2', 'L3']:
+    for l in ['L1', 'L2', 'L3']:
     # for l in ['L1', 'L2']:
-    for l in ['L1']:
+    # for l in ['L1']:
         prev = 0
         if len(link_rate_dict[l]) != 0:
             prev = links[l].prev
@@ -108,6 +108,7 @@ if __name__ == '__main__':
             packet_delay_dict[f_id] = []
             flow_rate_dict[f_id] = []
         if h.get_tcp():
+            assert False
             ec.create_update_window_event(h, PERIODIC_FAST_INTERVAL)
     
     for l in links:
@@ -139,8 +140,6 @@ if __name__ == '__main__':
         #     print "Host Window Link id:", l
         #     print "Host Window Link size:", len(links[l].packet_queue)
 
-        if eq.qsize() > 19000:
-            exit(1)
         # print 'Link 1 size: ', len(links['L1'].packet_queue)
         # print 'Link 1 capacity size: ', links['L1'].capacity
         # print 'Link 1 size: ', links['L1']
@@ -163,6 +162,10 @@ if __name__ == '__main__':
         #             t, event_top = eq.get()
         #             print 'Event details at packet 14', event_top
         #         exit(1)
+        
+        # Hackish solution to stop the program
+        if eq.qsize() < 3:
+            break
 
 
         # Host or Router receives a packet
@@ -215,9 +218,6 @@ if __name__ == '__main__':
             ec.create_graph_event(global_time + GRAPH_EVENT_INTERVAL)
 
         elif event_type == UPDATE_WINDOW:
-            # Hackish solution to stop the program
-            # if eq.qsize() < 5:
-            #     break
 
             # if eq.qsize() == 0:
             #     break
@@ -295,6 +295,9 @@ if __name__ == '__main__':
         else:
             print "event type", event_type
             assert False
+
+
+        print "outstanding packets:", hosts['H1'].get_outstanding_pkts()
 
         done = 1
         for h in hosts:
