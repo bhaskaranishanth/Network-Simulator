@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt 
-import numpy as np 
+import numpy as np
+
+# List of methods used to plot graphs
+
 def pck_tot_buffers(pck_graph_dict, time, links):
     for link_id in links.keys():
         link = links[link_id]
@@ -25,7 +28,6 @@ def graph_window_size(window_size_dict):
     plt.ylabel("Window Size")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 def graph_packet_delay(packet_delay_dict):
@@ -43,7 +45,6 @@ def graph_packet_delay(packet_delay_dict):
     plt.ylabel("Packet delay")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 def smooth_avg_list(x, y, avg_time):
@@ -65,10 +66,10 @@ def smooth_avg_list(x, y, avg_time):
     return avg_x, avg_y
 
 def graph_packet_loss(packet_loss_dict):
+    # Switch back and forth between test case links
     # for key in ['L1', 'L2', 'L3']:
     for key in ['L1', 'L2']:
     # for key in ['L1']:
-    # for key in packet_loss_dict:
         packet_loss_list = packet_loss_dict[key]
         lines = []
         x = [elem[0] for elem in packet_loss_list]
@@ -102,12 +103,10 @@ def graph_packet_loss(packet_loss_dict):
     plt.show()
 
 
-
 def graph_flow_rate(flow_rate_dict):
     for key in flow_rate_dict:
         flow_rate_list = flow_rate_dict[key]
         lines = []
-        # flow_rate_list = sorted(flow_rate_dict)
 
         x = [elem[0] for elem in flow_rate_list]
         y = [elem[1] for elem in flow_rate_list]
@@ -121,11 +120,11 @@ def graph_flow_rate(flow_rate_dict):
     plt.ylabel("Flow rate")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 
 def graph_link_rate(link_rate_dict):
+    # Switch back and forth between test case links
     # for key in ['L1', 'L2', 'L3']:
     for key in ['L1', 'L2']:
     # for key in ['L1']:
@@ -143,7 +142,6 @@ def graph_link_rate(link_rate_dict):
     plt.ylabel("Link rate")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 
@@ -169,7 +167,6 @@ def graph_pck_drop_rate(drop_packets):
     plt.ylabel("Rate Of Packets Dropped")
     plt.xlabel("Time")
     plt.legend(lines)
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 def graph_pck_buf(pck_graph_dict):
@@ -182,6 +179,7 @@ def graph_pck_buf(pck_graph_dict):
         avg_time = 5
         avg_x, avg_y = smooth_avg_list(x, y, avg_time)
 
+        # Switch back and forth between test case links
         # if key in ['L1', 'L2', 'L3']:
         if key in ['L1', 'L2']:
         # if key in ['L1']:
@@ -191,6 +189,5 @@ def graph_pck_buf(pck_graph_dict):
     plt.ylabel("Buffer Occupancy")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
