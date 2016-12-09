@@ -176,16 +176,12 @@ if __name__ == '__main__':
             network.populate_packets_into_buffer(curr_host, global_time, dropped_packets)
 
         else:
-            print "event type", event_type
             assert False
 
         done = 1
         for h in hosts:
             if hosts[h].get_flow_id() != None:
-                if not len(hosts[h].get_outstanding_pkts()) % 1000:
-                    print "out pkts", len(hosts[h].get_outstanding_pkts()) / 1000
                 if not hosts[h].flow_done():
-                    
                     done = 0
                     break
 

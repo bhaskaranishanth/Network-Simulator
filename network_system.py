@@ -124,7 +124,6 @@ class NetworkSystem:
         Sets each hosts base RTT to be infinity
         '''
         base_rtt_table = self.get_base_RTT()
-        print base_rtt_table
         for _, h in self.hosts.iteritems():
             h.set_base_RTT(float(10**10))
 
@@ -169,16 +168,12 @@ class NetworkSystem:
             assert src in hosts or src in routers, 'Endpoint is invalid'
             assert dst in hosts or dst in routers, 'Endpoint is invalid'
 
-            print src, dst, link_id
             # Create two way links
             src_node = hosts[src] if src in hosts else routers[src]
             dst_node = hosts[dst] if dst in hosts else routers[dst]
             l = Link(link_id, buf, prop_time, trans_time, congestion, direction)
-            print l.get_endpoints()
             l.connect(src_node, dst_node)
             l.direction = (src, dst)
-            print "what"
-            print l.get_direction()
             assert l.get_direction() != None
             links[link_id] = l
 
@@ -213,9 +208,6 @@ class NetworkSystem:
                         link_adj = h1.get_link()
                         time += link_adj.get_prop_time() + MESSAGE_SIZE/link_adj.get_trans_time()
                         dest = link_adj.get_link_endpoint(h1)
-                        print h1.get_ip()
-                        print h2.get_ip()
-                        print "Dest: ", dest
                         while dest != h2: 
                             new_dest = dest.get_routing_table()[h2] 
                             link_adj = dest.get_link_for_dest(new_dest)
