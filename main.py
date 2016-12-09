@@ -223,6 +223,7 @@ if __name__ == '__main__':
                 print "changing window size:", curr_host.get_window_size()
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
             elif curr_host.get_is_cubic():
+                assert False
                 K = (curr_host.window_size_max * BETA / float(C)) ** (1.0/3.0)
                 t = global_time - curr_host.last_congestion_time
                 window_new = C * (t - K)**3 + curr_host.window_size_max
