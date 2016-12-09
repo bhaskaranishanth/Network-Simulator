@@ -107,9 +107,7 @@ if __name__ == '__main__':
     # Continuously pull events from the priority queue
     while eq.qsize() != 0 and not done:
         print 'Host Window Queue size: ', eq.qsize()
-        print '-' * 80
         t, event_top = eq.get()
-        print 'Event details', event_top
         assert t != None
         assert t >= global_time
         global_time = t
@@ -160,7 +158,6 @@ if __name__ == '__main__':
                 # if curr_host in window_size_dict:
                 w = curr_host.get_window_size()
                 curr_host.set_window_size(min(2 * w, (1 - GAMMA) * w + GAMMA * (curr_host.get_base_RTT() / curr_host.get_last_RTT() * w + ALPHA)))
-                print "changing window size:", curr_host.get_window_size()
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
             elif curr_host.get_is_cubic():
                 K = (curr_host.window_size_max * BETA / float(C)) ** (1.0/3.0)
@@ -191,11 +188,6 @@ if __name__ == '__main__':
                     
                     done = 0
                     break
-            # else:
-            #     assert False
-
-    # for l in links:
-    #     assert len(links[l].packet_queue) == 0
 
     graph_link_rate(link_rate_dict)
     graph_pck_buf(pck_graph_dict)

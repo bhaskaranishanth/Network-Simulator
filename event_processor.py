@@ -35,8 +35,6 @@ class EventProcessor:
                 curr_link = links[l]
                 break
         if curr_link == None:
-            print "exp_packet_id: ", event_top.get_src()
-            print "exp_packet_id: ", event_top.get_dest()
             assert curr_link != None
         return curr_link
 
@@ -46,10 +44,6 @@ class EventProcessor:
         Handles the insertion of the given packet into the link's buffer. If the packet is not 
         able to be added to the buffer, it will be dropped.
         """
-        print 'Insert packet into buffer..'
-        print 'Curr loc', packet.get_curr_loc()
-        print 'Nxt:', next_hop
-
         assert packet.get_curr_loc() == next_hop.get_ip()
         assert packet.get_type() in [MESSAGE_PACKET, ACK_PACKET, ROUTER_PACKET] 
 
@@ -86,22 +80,15 @@ class EventProcessor:
                     self.ec.create_remove_from_buffer_event(next_time, packet, src1_ip, src2_ip)
                     return True
             else:
-                print "link: ", link
-                print "Direction: ", link.get_direction()
-                print "Curr: ", (src1_ip, src2_ip)
                 assert False
         else:
             return self.handle_packet_to_buffer_insertion(packet, link, dropped_packets, global_time, next_hop)
 
 
     def process_remove_from_buffer_event(self, event_top, global_time):
-        print "event details", event_top
         curr_link = self.get_link_from_event(event_top, self.links)
         assert len(curr_link.packet_queue) > 0
         curr_packet = event_top.get_data()
-        print "current packet", curr_packet
-        print "curr link", curr_link
-        # curr_link.print_link_buffer()
         assert curr_packet == curr_link.packet_queue[0]
         curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
         assert curr_packet.get_packet_id() != 0
@@ -128,8 +115,6 @@ class EventProcessor:
             next_dest = next_pkt.get_curr_loc()
             next_entity = self.routers if next_dest in self.routers else self.hosts
             next_src = curr_link.get_link_endpoint(next_entity[next_dest]).get_ip()
-            print "next source", next_src
-            print "next dest", next_dest
             assert curr_link.get_direction() != None
             if curr_link.get_direction() == (next_src, next_dest):
                 self.ec.create_remove_from_buffer_event(global_time + next_pkt.get_capacity() / curr_link.get_trans_time(), next_pkt, next_src, next_dest)
@@ -137,19 +122,14 @@ class EventProcessor:
                 next_time = max(curr_link.get_last_pkt_dest_time(), global_time)
                 self.ec.create_remove_from_buffer_event(next_time, next_pkt, next_src, next_dest)
             else:
-                print curr_link.get_direction()
-                print "packet details", next_pkt
                 assert False
 
 
     def process_routing_packet_received_event(self, event_top, hosts, links, dropped_packets, global_time, routers):
-        # curr_link = self.get_link_from_event(event_top, links)
         curr_packet = event_top.get_data()
         assert curr_packet.get_type() == ROUTER_PACKET
         assert curr_packet.get_packet_id() != 0
-        # curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
 
-        # self.ec.create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
         # Ignore routing packets sent to host
         if event_top.get_dest() in hosts:
             return 
@@ -164,7 +144,6 @@ class EventProcessor:
         # If the current weight is already smaller than routing packet's payload, don't update
         if weight_table[pkt_src][1] <= routing_pkt.get_payload():
             return
-
 
         # Update packet weight
         hop_entity = routers if event_top.get_src() in routers else hosts
@@ -181,29 +160,16 @@ class EventProcessor:
             self.insert_packet_into_buffer(l, routers[curr_router], dest, new_pkt, dropped_packets, global_time)
 
     def process_packet_received_event(self, event_top, global_time, links, routers, hosts, dropped_packets, acknowledged_packets, window_size_dict, network):
-        # Retrieve the previous link and remove the received
-        # packet from the buffer
-        print 'Processing packet received event '
-        print '*' * 40
-
-        # curr_link = self.get_link_from_event(event_top, links)
+        # Retrieve the previous link and remove the received packet from the buffer
         curr_packet = event_top.get_data()
-        print "Host: curr loc", curr_packet.get_curr_loc()
         assert curr_packet.get_type() != ROUTER_PACKET
         assert curr_packet.get_packet_id() != 0
-
-        # curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
-        # print curr_packet
-
-        # self.ec.create_next_packet_event(curr_link, global_time, event_top, hosts, routers)
 
         # Sending packets into the next buffer
         # Router component
         if curr_packet.get_curr_loc() in routers:
-            print 'Packet received in router....'     
             curr_router = routers[curr_packet.get_curr_loc()]
             next_hop = curr_router.get_routing_table()[hosts[curr_packet.get_dest()]]
-            print "next hop", next_hop
             next_link = curr_router.get_link_for_dest(next_hop)
             curr_packet.set_curr_loc(next_hop.get_ip())
 
@@ -211,19 +177,15 @@ class EventProcessor:
 
         # Host receives a packet
         elif curr_packet.get_curr_loc() in hosts:
-            print 'Host receives a packet'
             curr_host = hosts[curr_packet.get_curr_loc()]
             next_link = hosts[curr_packet.get_curr_loc()].get_link()
             next_dest = next_link.get_link_endpoint(curr_host)
             curr_packet.set_curr_loc(next_dest.get_ip())
 
             assert curr_packet.get_packet_id() != 0
-            # assert curr_packet.get_actual_id() != 0
-
 
             # Acknowledgment packet received
             if curr_packet.get_type() == ACK_PACKET:
-                print 'Acknowledged this shit'
                 window_size_dict[curr_host.get_flow_id()].append((global_time, curr_host.get_window_size()))
 
                 # Fast code
@@ -236,10 +198,8 @@ class EventProcessor:
                 if curr_host.flow_done():
                     return
 
-                print "fast recovery A first time", curr_packet.get_packet_id()
                 exp_packet_id = curr_host.get_outstanding_pkts()[0]
                 # Duplicate ack
-                # if curr_packet.get_packet_id() in acknowledged_packets:
                 num_packs = self.acknowledge(acknowledged_packets, curr_packet.get_packet_id())
                 if num_packs == 1:
                     curr_host.set_window_count(curr_host.get_window_count() - 1)
@@ -247,7 +207,7 @@ class EventProcessor:
 
                 # If we are in Reno
                 if curr_host.get_is_reno():
-                    # 18 (13), add 18 to ack packet
+                    # If the expected packet id is not received
                     if exp_packet_id != curr_packet.get_packet_id():
                         num_last_rec = self.acknowledge(acknowledged_packets, exp_packet_id - 1)
 

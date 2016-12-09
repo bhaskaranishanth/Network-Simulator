@@ -37,10 +37,6 @@ class Flow:
     def get_start(self):
         return self.flow_start
 
-    # def get_tcp(self):
-    #     assert self.is_fast == 1
-    #     return self.is_fast == 1
-
     def is_reno(self):
         assert type(self.is_reno) == bool
         return self.is_reno
@@ -55,7 +51,6 @@ class Flow:
 
     def get_tcp_val(self):
         return self.tcp_val
-
 
     
     """ MUTATOR METHODS """
@@ -75,9 +70,6 @@ class Flow:
     def set_start(self, start):
         self.flow_start = start
 
-    # def set_tcp(self, is_fast):
-    #     assert is_fast in [0,1,2]
-    #     self.is_fast = is_fast
 
     def gen_packets(self):
         """
