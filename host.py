@@ -32,8 +32,6 @@ class Host:
 
         self.fast_recovery = 0
 
-        # self.abs_window_count = 0 
-
         # Cubic val parameters
         self.window_size_max = self.window_size
         self.last_congestion_time = 0
@@ -61,11 +59,6 @@ class Host:
 
     def get_threshold(self):
         return self.threshold
-
-    # def get_tcp(self):
-    #     assert type(self.is_fast) == bool or self.is_fast == None
-    #     print type(self.is_fast)
-    #     return self.is_fast
 
     def get_flow_id(self):
         return self.flow_id
@@ -127,24 +120,11 @@ class Host:
         self.link = link
         
     def set_window_count(self, window_count):
-
-        # assert self.window_count == window_count + 1 or self.window_count == window_count - 1
-        # self.abs_window_count += 1 if window_count > self.window_count else 0
-        # print 'outstanding_pkts packets: ', self.outstanding_pkts
-        print 'Window countb: ', window_count
-        print 'Window count: ', self.window_count
-        # print 'Abs Window count: ', self.abs_window_count
-        print 'Window size: ', self.window_size
-        assert window_count >= 0
         self.window_count = window_count
-        
-        # assert self.abs_window_count - self.window_count + len(self.outstanding_pkts) == 70
-
 
     def set_window_size(self, window_size):
         assert window_size > 0
         self.window_size = window_size
-
 
     def set_threshold(self, threshold):
         self.threshold = threshold
@@ -187,12 +167,8 @@ class Host:
         to be that id value minus 1.
         """
         curr_val = self.last_recv_pkt_id
-        # print "cur val: ", curr_val
-        # print "list: ", self.recv_pkt_ids
         while curr_val in self.recv_pkt_ids:
             curr_val += 1
-        #     print "ya"
-        # print "new id: ", self.last_recv_pkt_id
         self.last_recv_pkt_id = curr_val - 1
 
     def set_last_received_pkt_id(self, id):
@@ -200,7 +176,6 @@ class Host:
 
     def set_last_missing_pkt_id(self, id):
         self.last_miss_pkt_id = id
-
 
 
     def remove_packet(self):
@@ -214,7 +189,6 @@ class Host:
 
     def del_outstanding_pkt(self, pkt):
         self.outstanding_pkts.remove(pkt)
-
 
     
     """ PRINT METHODS """

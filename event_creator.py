@@ -14,13 +14,9 @@ class EventCreator:
         event and adds it to the global queue. Returns the event
         to make it easier to debug code.
         """
-        print "Host: packet source", pkt
         assert pkt.get_packet_id() != 0
         new_event = Event(PACKET_RECEIVED, end_time, src, dest, pkt)
         self.eq.put((new_event.get_initial_time(), new_event))
-
-        # link.remove_from_buffer(pkt, pkt.get_capacity())
-        print pkt
 
         return new_event
 

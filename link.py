@@ -43,8 +43,6 @@ class Link:
         assert isinstance(dst, Router) or isinstance(dst, Host)
         self.src = src
         self.dst = dst
-        # self.set_direction(src.get_ip(), dst.get_ip())
-
 
     def get_endpoints(self):
         '''
@@ -88,7 +86,6 @@ class Link:
 
     def set_direction(self, direction):
         print direction
-        # exit(1)
         assert len(direction) == 2
         assert type(direction[0]) == str and type(direction[1]) == str
         self.direction = direction
@@ -114,13 +111,6 @@ class Link:
         Inserts the packet into the link's buffer and return
         a boolean indicating success or failure.
         """
-        print 'insert_into_buffer....'
-        # print 'capacity: ', self.capacity
-        # print 'packet size: ', packet.get_capacity()
-        # print 'Buffer: ', self.buf
-        # print type(self.capacity), type(packet.get_capacity()), type(self.buf)
-        # print self.capacity + packet.get_capacity() > self.buf
-        print self.link_id
         if self.capacity + packet.get_capacity() > self.buf:
             return False
         else:
@@ -141,20 +131,12 @@ class Link:
         Remove the packet from the link's buffer and return
         a boolean indicating success or failure.
         """
-        print 'remove_from_buffer....'
-        # print 'capacity: ', self.capacity
-        # print 'packet size: ', packet_size
-        # print 'Buffer: ', self.buf
-        print "removing: link ID", self.link_id
-        print "removing from buffer: capacity", self.capacity
-        print "removing from buffer: packet size", packet_size
         if self.capacity - packet_size < 0:
             assert False
         self.capacity -= packet_size
         self.num_packets -= 1
         popped_pkt = self.packet_queue.popleft()
 
-        # assert popped_pkt == packet
         assert self.num_packets >= 0
 
     def update_next_free_time(self, free_time):

@@ -27,7 +27,6 @@ class Router:
     def reset_weight_table(self):
         for k, v in self.weight_table.iteritems():
             self.weight_table[k] = (v[0], float('inf'))
-        print "Rest: ", self.weight_table
 
     def add_link(self, link):
         ''' 

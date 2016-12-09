@@ -93,7 +93,6 @@ class EventProcessor:
         curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
         assert curr_packet.get_packet_id() != 0
 
-        # print curr_packet
         curr_dest = curr_packet.get_curr_loc()
         curr_entity = self.routers if curr_dest in self.routers else self.hosts
         curr_src = curr_link.get_link_endpoint(curr_entity[curr_dest]).get_ip()
@@ -212,18 +211,13 @@ class EventProcessor:
                         num_last_rec = self.acknowledge(acknowledged_packets, exp_packet_id - 1)
 
                         if num_last_rec == 4:
-                            print "fast recovery A pkt id", curr_packet.get_packet_id()
-                            # print "fast recovery A actual id", curr_packet.get_actual_id()
-                            # assert curr_host.get_fast_recovery() == 0
                             curr_host.set_fast_recovery(1)
                             # Retransmit lost packet
                             next_link = curr_host.get_link()
                             next_hop = next_link.get_link_endpoint(curr_host)
                             p = Packet(MESSAGE_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_hop.get_ip(), global_time)
                             p.set_packet_id(exp_packet_id)
-                            # p.set_actual_id(curr_packet.get_packet_id() + 1)
                             self.insert_packet_into_buffer(next_link, curr_host, next_hop, p, dropped_packets, global_time)
-                                # curr_host.set_window_count(curr_host.get_window_count() + 1)
 
                             # Change window and threshold to w/2 
                             curr_host.set_window_size(curr_host.get_window_size() / 2.0 + 3)
@@ -234,12 +228,6 @@ class EventProcessor:
 
                     else:
                         curr_host.set_fast_recovery(0)
-                    # if curr_packet.get_actual_id() not in acknowledged_packets:
-                    #     print "fast recovery A ack packets", acknowledged_packets
-                    #     acknowledged_packets[curr_packet.get_actual_id()] = 1
-                    #     curr_host.del_outstanding_pkt(curr_packet.get_actual_id())
-
-                    # if acknowledged_packets[curr_packet.get_packet_id()] == 4:
 
                     if not curr_host.get_fast_recovery():
                         if curr_host.get_window_size() < curr_host.get_threshold():
@@ -247,78 +235,18 @@ class EventProcessor:
                         else:
                             curr_host.set_window_size(curr_host.get_window_size() + 1.0 / curr_host.get_window_size())
 
-                # else:
-                #     # Store ack packet id for the first time
-                #     # assert curr_packet.get_packet_id() == curr_packet.get_actual_id()
-                #     self.acknowledge(acknowledged_packets, curr_packet.get_packet_id())
-                #     # print "fast recovery A outstanding", curr_host.get_outstanding_pkts()
-                #     curr_host.del_outstanding_pkt(curr_packet.get_packet_id())
-
-                #     # If Reno
-                #     if not curr_host.get_tcp():
-                #         if curr_host.get_outstanding_pkts()[0] < curr_packet.get_packet_id():
-                #             dest_host = curr_packet.get_src()
-                #             assert dest_host != curr_host.get_ip()
-                #             exp_packet_id = curr_host.get_outstanding_pkts()[0]
-                #             print "fast recovery A expected", exp_packet_id - 1
-                #             # assert curr_packet.get_actual_id() < exp_packet_id
-                #             hosts[dest_host].set_last_received_pkt_id(exp_packet_id - 1)
-                #             curr_host.set_fast_recovery(1)
-                          
-                #         elif curr_host.get_outstanding_pkts()[0] >= curr_packet.get_packet_id() + 1: 
-                #             # assert curr_host.get_outstanding_pkts()[0] == curr_packet.get_packet_id()
-                #             if curr_host.get_fast_recovery():
-                #                 curr_host.set_fast_recovery(0)
-                #                 curr_host.set_window_size(curr_host.get_threshold())
-                #                 print "fast recovery src", curr_packet.get_src()
-                #                 print "fast recovery dest", curr_packet.get_dest()
-                #                 # Set the new last received packet on receiving host
-                #                 dest_host = curr_packet.get_src()
-                #                 assert dest_host != curr_host.get_ip()
-                #                 exp_packet_id = curr_host.get_outstanding_pkts()[0]
-                #                 print "fast recovery B expected", exp_packet_id - 1
-                #                 assert curr_packet.get_actual_id() < exp_packet_id
-                #                 hosts[dest_host].set_last_received_pkt_id(exp_packet_id - 1)
-                #         else:
-                #             print "fast recovery error curr packet", curr_packet.get_packet_id()
-                #             print "fast recovery error", curr_host.get_outstanding_pkts()[0]
-                #             assert False
-
-
-                print "threshold", curr_host.get_threshold()
                 network.populate_packets_into_buffer(curr_host, global_time, dropped_packets)
 
             # Process other packets received by the hosts
             else:
-                print 'Received host'
-                print 'Running...'
                 assert curr_packet.get_type() == MESSAGE_PACKET
-
-                # Create acknowlegment packet with same packet id as the original packet
-
-                # last_recv_pkt = curr_host.get_last_received_pkt_id()
-                # exp_packet_id = hosts[curr_packet.get_src()].get_outstanding_pkts()[0] if last_recv_pkt == None else (last_recv_pkt + 1)
-                # assert exp_packet_id != None
-
-                # print "fast recovery B exp_packet_id", exp_packet_id
-                # print "fast recovery B actual_packet_id", curr_packet.get_actual_id()
 
                 # Create ack packet and send
                 p = Packet(ACK_PACKET, 1, curr_host.get_ip(), curr_packet.get_src(), next_dest.get_ip(), global_time)
                 p.set_packet_id(curr_packet.get_packet_id())
-                # p.set_actual_id(curr_packet.get_actual_id())
                 next_hop = next_dest
 
-                # Set ID for packet that we are acknowledging
-                # if exp_packet_id != curr_packet.get_actual_id():
-                #     p.set_packet_id(exp_packet_id - 1)
-                # else:
-                #     p.set_packet_id(exp_packet_id)
-                #     curr_host.set_last_received_pkt_id(exp_packet_id)
-
                 self.insert_packet_into_buffer(next_link, curr_host, next_hop, p, dropped_packets, global_time)
-
-
 
 
     def process_timeout_event(self, event_top, global_time, hosts, dropped_packets, acknowledged_packets):
@@ -328,45 +256,20 @@ class EventProcessor:
 
         assert curr_packet.get_packet_id() != 0
 
-        # Packet was acknowledged beforehand
-        # if p_id in acknowledged_packets:
-        #     if acknowledged_packets[p_id] == 1:
-        #         del acknowledged_packets[p_id]
-        #     else:
-        #         acknowledged_packets[p_id] -= 1
-        #         assert acknowledged_packets[p_id] > 0
         if p_id not in acknowledged_packets:
-            # print 'Creating timeout packet'
             if curr_host.get_is_reno():
                 curr_host.set_threshold(max(curr_host.get_window_size() / 2.0, 2.0))
                 curr_host.set_window_size(1)
-                print "window size 3: %f, threshold: %f" % (curr_host.get_window_size(), curr_host.get_threshold())
 
             curr_link = curr_host.get_link()
             next_hop = curr_link.get_link_endpoint(curr_host)
             # Create new packet
             p = Packet(MESSAGE_PACKET, 1, curr_packet.get_src(), curr_packet.get_dest(), next_hop.get_ip(), global_time)
             p.set_packet_id(curr_packet.get_packet_id())
-            # p.set_actual_id(curr_packet.get_actual_id())
             dropped_packets.append(p)
 
             # Insert resend packet into buffer
             self.insert_packet_into_buffer(curr_link, curr_host, next_hop, p, dropped_packets, global_time)
-                # curr_host.set_window_count(curr_host.get_window_count() + 1)
-
-            # if curr_link.insert_into_buffer(p, p.get_capacity()):
-            #     if len(curr_link.packet_queue) == 1:
-            #         assert p.get_curr_loc() == next_hop.get_ip()
-            #         create_packet_received_event(global_time, p, curr_link, p.get_src(), next_hop.get_ip())
-            # else:
-
-            # # Create a timeout event for the new packet
-            #     dropped_packets.append(p)
-            #     curr_link.increment_drop_packets()
-            #     #assert False
 
             dst_time = global_time + TIMEOUT_VAL
             self.ec.create_timeout_event(dst_time, p)
-
-        print 'Timeout happened!!!!!'
-        print 'Other'

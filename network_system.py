@@ -62,8 +62,6 @@ class NetworkSystem:
                 else:
                     break
 
-            # assert len(link.packet_queue) == 0 or len(link.packet_queue) == h.get_window_size()
-
 
     def create_packet_events(self):
         # Creates timeout events for all packets in buffer
@@ -75,11 +73,9 @@ class NetworkSystem:
                 self.ec.create_timeout_event(TIMEOUT_VAL + p.get_init_time(), p)
             if len(link.packet_queue) > 0 and h.get_ip() == p.get_src():
                 # Create the first packet received event
-                # TODO: possibly remove the packet from the buffer?
                 p = link.packet_queue[0]
                 curr_src = h
                 next_dest = link.get_link_endpoint(h)
-                # link.remove_from_buffer(p, p.get_capacity())
                 self.ec.create_remove_from_buffer_event(p.get_init_time(), p, curr_src.get_ip(), next_dest.get_ip())
 
 
@@ -87,14 +83,10 @@ class NetworkSystem:
 
         while curr_host.get_window_count() < curr_host.get_window_size():
             pkt = curr_host.remove_packet()
-            # if pkt.packet_id == 9000:
-            #     print 'Host Window Reached here'
-            #     exit(1)
             next_link = curr_host.get_link()
             next_dest = next_link.get_link_endpoint(curr_host)
             if pkt != None:
                 assert pkt.get_curr_loc() != None
-                # self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
                 if len(next_link.packet_queue) == 0:
                     if next_link.get_direction() == (curr_host.get_ip(), next_dest.get_ip()):
                         # Insert packet into the next link's buffer
@@ -121,7 +113,6 @@ class NetworkSystem:
                         self.ec.create_timeout_event(TIMEOUT_VAL + global_time, pkt)
                         curr_host.set_window_count(curr_host.get_window_count()+1)
                     else:
-                        # TODO
                         curr_host.insert_packet(pkt)
                         break
             else:
@@ -136,8 +127,6 @@ class NetworkSystem:
         print base_rtt_table
         for _, h in self.hosts.iteritems():
             h.set_base_RTT(float(10**10))
-            # h.set_base_RTT(float('inf'))
-
 
 
     def initialize_packets(self):
@@ -152,17 +141,9 @@ class NetworkSystem:
             for packet in self.flows[key].gen_packets():
                 count += 1
                 packet.set_packet_id(count)
-                # packet.set_actual_id(count)
                 curr_host.insert_packet(packet)
                 curr_host.add_outstanding_pkt(count)
 
-                # if count == 100:
-                #     break
-
-            # if count == 1000:
-            #     break
-
-        # print "Host: oustanding pkts", self.hosts["S2"].get_outstanding_pkts()
 
     def process_input(self):
         host_f = open(HOST_FILE, 'r')
@@ -193,7 +174,6 @@ class NetworkSystem:
             src_node = hosts[src] if src in hosts else routers[src]
             dst_node = hosts[dst] if dst in hosts else routers[dst]
             l = Link(link_id, buf, prop_time, trans_time, congestion, direction)
-            # print l
             print l.get_endpoints()
             l.connect(src_node, dst_node)
             l.direction = (src, dst)
@@ -220,8 +200,6 @@ class NetworkSystem:
             flows[flow_id] = Flow(flow_id, data_amt, src, dst, flow_start, is_fast)
 
         return hosts, routers, links, flows
-
-
 
 
     def get_base_RTT(self):

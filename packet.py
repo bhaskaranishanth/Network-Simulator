@@ -82,10 +82,6 @@ class Packet:
     def get_packet_id(self):
         return self.packet_id
 
-    # def get_actual_id(self):
-    #     return self.actual_id
-
-
     """ ACCESSOR METHODS """
 
     def set_type(self, packet_type):
@@ -114,10 +110,6 @@ class Packet:
     def set_packet_id(self, id):
         assert type(id) == int
         self.packet_id = id
-
-    # def set_actual_id(self, id):
-    #     assert type(id) == int
-    #     self.actual_id = id
 
     """ PRINT METHODS """
     def __str__(self):
