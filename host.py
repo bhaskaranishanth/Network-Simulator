@@ -23,7 +23,6 @@ class Host:
         self.outstanding_pkts = []
 
         # Store the received and missing packet ids
-        # Figure out a way to deal with multiple flows
         self.pkt_id_dict = {}
         self.recv_pkt_ids = []
         self.miss_pkt_ids = []
@@ -101,7 +100,6 @@ class Host:
         return self.is_reno
 
     def get_is_fast(self):
-        print 'is fast: ', self.is_fast
         assert type(self.is_fast) == bool
         return self.is_fast
     

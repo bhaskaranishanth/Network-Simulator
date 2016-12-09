@@ -11,8 +11,7 @@ class EventCreator:
     def create_packet_received_event(self, end_time, pkt, link, src, dest):
         """
         Takes in packet and link information, creates a PACKET_RECEIVED
-        event and adds it to the global queue. Returns the event
-        to make it easier to debug code.
+        event and adds it to the global queue. Returns the event.
         """
         assert pkt.get_packet_id() != 0
         new_event = Event(PACKET_RECEIVED, end_time, src, dest, pkt)
@@ -22,9 +21,8 @@ class EventCreator:
 
     def create_routing_packet_received_event(self, end_time, pkt, link, src, dest):
         """
-        Takes in packet and link information, creates a PACKET_RECEIVED
-        event and adds it to the global queue. Returns the event
-        to make it easier to debug code.
+        Takes in packet and link information, creates a ROUTING_PACKET_RECEIVED
+        event and adds it to the global queue. Returns the event.
         """
         new_event = Event(ROUTING_PACKET_RECEIVED, end_time, src, dest, pkt)
         self.eq.put((new_event.get_initial_time(), new_event))
@@ -32,9 +30,8 @@ class EventCreator:
 
     def create_dynamic_routing_event(self, routing_time):
         """
-        Takes in packet and link information, creates a PACKET_RECEIVED
-        event and adds it to the global queue. Returns the event
-        to make it easier to debug code.
+        Takes in packet and link information, creates a DYNAMIC_ROUTING
+        event and adds it to the global queue. Returns the event.
         """
         new_event = Event(DYNAMIC_ROUTING, routing_time, None, None, None)
         self.eq.put((new_event.get_initial_time(), new_event))
@@ -49,20 +46,27 @@ class EventCreator:
     def create_timeout_event(self, end_time, pkt):
         """
         Takes in end time and packet, creates a TIMEOUT_EVENT
-        event and adds it to the global queue. Returns the event
-        to make it easier to debug code.
+        event and adds it to the global queue. Returns the event.
         """
         timeout_event = Event(TIMEOUT_EVENT, end_time, pkt.get_src(), pkt.get_dest(), pkt)
         self.eq.put((timeout_event.get_initial_time(), timeout_event))
         return timeout_event
 
     def create_remove_from_buffer_event(self, end_time, pkt, src, dest):
+        """
+        Takes in end time and packet, creates a REMOVE_FROM_BUFFER
+        event and adds it to the global queue. Returns the event.
+        """
         assert pkt.get_packet_id() != 0
         remove_from_buffer_event = Event(REMOVE_FROM_BUFFER, end_time, src, dest, pkt)
         self.eq.put((remove_from_buffer_event.get_initial_time(), remove_from_buffer_event))
         return remove_from_buffer_event
         
     def create_update_window_event(self, curr_host, time):
+        """
+        Takes in end time and packet, creates a UPDATE_WINDOW
+        event and adds it to the global queue. Returns the event.
+        """
         assert curr_host.get_is_reno() or curr_host.get_is_fast() or curr_host.get_is_cubic()
         update_window_event = Event(UPDATE_WINDOW, time, curr_host.get_ip(), None, None)
         self.eq.put((update_window_event.get_initial_time(), update_window_event))

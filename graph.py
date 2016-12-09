@@ -67,8 +67,8 @@ def smooth_avg_list(x, y, avg_time):
 
 def graph_packet_loss(packet_loss_dict):
     # Switch back and forth between test case links
-    # for key in ['L1', 'L2', 'L3']:
-    for key in ['L1', 'L2']:
+    for key in ['L1', 'L2', 'L3']:
+    # for key in ['L1', 'L2']:
     # for key in ['L1']:
         packet_loss_list = packet_loss_dict[key]
         lines = []
@@ -99,7 +99,6 @@ def graph_packet_loss(packet_loss_dict):
     plt.ylabel("Packet loss")
     plt.xlabel("Time")
     plt.legend()
-    #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
 
 
@@ -125,8 +124,8 @@ def graph_flow_rate(flow_rate_dict):
 
 def graph_link_rate(link_rate_dict):
     # Switch back and forth between test case links
-    # for key in ['L1', 'L2', 'L3']:
-    for key in ['L1', 'L2']:
+    for key in ['L1', 'L2', 'L3']:
+    # for key in ['L1', 'L2']:
     # for key in ['L1']:
         link_rate_list = link_rate_dict[key]
         lines = []
@@ -180,8 +179,8 @@ def graph_pck_buf(pck_graph_dict):
         avg_x, avg_y = smooth_avg_list(x, y, avg_time)
 
         # Switch back and forth between test case links
-        # if key in ['L1', 'L2', 'L3']:
-        if key in ['L1', 'L2']:
+        if key in ['L1', 'L2', 'L3']:
+        # if key in ['L1', 'L2']:
         # if key in ['L1']:
             line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label = key)
             lines.append(line_up)

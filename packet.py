@@ -36,9 +36,7 @@ class Packet:
         self.src = src
         self.dest = dest
         self.curr_loc = curr_loc
-        # self.packet_id = id(self)
         self.packet_id = None
-        # self.actual_id = None
         self.init_time = init_time
 
     def set_capacity(self):

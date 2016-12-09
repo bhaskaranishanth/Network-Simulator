@@ -30,7 +30,6 @@ class Link:
         self.src = None
         self.dst = None
 
-        print "created"
 
     """ ACCESSOR METHODS """
 
@@ -85,7 +84,6 @@ class Link:
     """ MUTATOR METHODS """
 
     def set_direction(self, direction):
-        print direction
         assert len(direction) == 2
         assert type(direction[0]) == str and type(direction[1]) == str
         self.direction = direction
