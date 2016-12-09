@@ -7,6 +7,10 @@ from link import *
 from host import *
 
 class EventProcessor:
+    """
+    Class that processes all types of events from the event queue.
+    """
+
     def __init__(self, ec, hosts, routers, links, flows):
         self.ec = ec
         self.hosts = hosts
@@ -16,6 +20,10 @@ class EventProcessor:
         
 
     def acknowledge(self, acknowledged_packets, p_id):
+        """
+        Function that keeps track of how many acks are received.
+        Useful for congestion control algorithms like Reno.
+        """
         if p_id in acknowledged_packets:
             acknowledged_packets[p_id] += 1
         else:
@@ -86,6 +94,11 @@ class EventProcessor:
 
 
     def process_remove_from_buffer_event(self, event_top, global_time):
+        """
+        Given the specific event, the function removes the packet from the 
+        link's buffer and gets the next packet in the buffer ready for
+        removal.
+        """
         curr_link = self.get_link_from_event(event_top, self.links)
         assert len(curr_link.packet_queue) > 0
         curr_packet = event_top.get_data()
@@ -93,6 +106,7 @@ class EventProcessor:
         curr_link.remove_from_buffer(curr_packet, curr_packet.get_capacity())
         assert curr_packet.get_packet_id() != 0
 
+        # Handle packet after traveling through the link
         curr_dest = curr_packet.get_curr_loc()
         curr_entity = self.routers if curr_dest in self.routers else self.hosts
         curr_src = curr_link.get_link_endpoint(curr_entity[curr_dest]).get_ip()
@@ -109,6 +123,7 @@ class EventProcessor:
         curr_link.set_direction((curr_src, curr_dest))
         curr_link.set_last_pkt_dest_time(end_time)
 
+        # Get next packet in the buffer and remove it at a future time.
         if len(curr_link.packet_queue) > 0:
             next_pkt = curr_link.packet_queue[0]
             next_dest = next_pkt.get_curr_loc()
@@ -125,6 +140,9 @@ class EventProcessor:
 
 
     def process_routing_packet_received_event(self, event_top, hosts, links, dropped_packets, global_time, routers):
+        """
+        Function that passes the routing packet to all other routers.
+        """
         curr_packet = event_top.get_data()
         assert curr_packet.get_type() == ROUTER_PACKET
         assert curr_packet.get_packet_id() != 0
@@ -159,6 +177,10 @@ class EventProcessor:
             self.insert_packet_into_buffer(l, routers[curr_router], dest, new_pkt, dropped_packets, global_time)
 
     def process_packet_received_event(self, event_top, global_time, links, routers, hosts, dropped_packets, acknowledged_packets, window_size_dict, network):
+        """
+        Handles message packets in both the hosts and the routers. Congestion control
+        is also handled in this function.
+        """
         # Retrieve the previous link and remove the received packet from the buffer
         curr_packet = event_top.get_data()
         assert curr_packet.get_type() != ROUTER_PACKET
@@ -250,12 +272,17 @@ class EventProcessor:
 
 
     def process_timeout_event(self, event_top, global_time, hosts, dropped_packets, acknowledged_packets):
+        """
+        Handles the timeout event. Makes sure to create similar packet
+        and resend it if the packet is not already acknowledged.
+        """
         curr_packet = event_top.get_data()
         curr_host = hosts[curr_packet.get_src()]
         p_id = curr_packet.get_packet_id()
 
         assert curr_packet.get_packet_id() != 0
 
+        # Only resend if we did not receive an ack
         if p_id not in acknowledged_packets:
             if curr_host.get_is_reno():
                 curr_host.set_threshold(max(curr_host.get_window_size() / 2.0, 2.0))
