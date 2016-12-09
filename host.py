@@ -13,9 +13,11 @@ class Host:
         self.window_count = 0
         self.window_size = WINDOW_SIZE
         self.threshold = THRESHOLD
-        self.is_fast = None
+        self.is_fast = False
+        self.is_reno = False
+        self.is_cubic = False
         self.flow_id = None
-        self.base_RTT = float('inf')
+        self.base_RTT = float(10**10)
         self.last_RTT = self.base_RTT
         self.bytes_received = 0
         self.outstanding_pkts = []
@@ -31,6 +33,10 @@ class Host:
         self.fast_recovery = 0
 
         # self.abs_window_count = 0 
+
+        # Cubic val parameters
+        self.window_size_max = self.window_size
+        self.last_congestion_time = 0
 
     
     """ ACCESSOR METHODS """
@@ -56,10 +62,10 @@ class Host:
     def get_threshold(self):
         return self.threshold
 
-    def get_tcp(self):
-        assert type(self.is_fast) == bool or self.is_fast == None
-        print type(self.is_fast)
-        return self.is_fast
+    # def get_tcp(self):
+    #     assert type(self.is_fast) == bool or self.is_fast == None
+    #     print type(self.is_fast)
+    #     return self.is_fast
 
     def get_flow_id(self):
         return self.flow_id
@@ -97,6 +103,19 @@ class Host:
     def get_fast_recovery(self):
         return self.fast_recovery
 
+    def get_is_reno(self):
+        assert type(self.is_reno) == bool
+        return self.is_reno
+
+    def get_is_fast(self):
+        print 'is fast: ', self.is_fast
+        assert type(self.is_fast) == bool
+        return self.is_fast
+    
+    def get_is_cubic(self):
+        assert type(self.is_cubic) == bool
+        return self.is_cubic
+
 
     """ MUTATOR METHODS """
 
@@ -126,12 +145,16 @@ class Host:
         assert window_size > 0
         self.window_size = window_size
 
+
     def set_threshold(self, threshold):
         self.threshold = threshold
 
-    def set_tcp(self, is_fast):
-        assert type(is_fast) == bool
-        self.is_fast = is_fast
+    def set_tcp(self, tcp_val):
+        assert tcp_val in ['0','1','2']
+        # assert type(is_fast) == bool
+        self.is_reno = int(tcp_val) == 0
+        self.is_fast = int(tcp_val) == 1
+        self.is_cubic = int(tcp_val) == 2
 
     def set_flow_id(self, flow_id):
         self.flow_id = flow_id

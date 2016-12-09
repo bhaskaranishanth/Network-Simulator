@@ -59,14 +59,14 @@ def smooth_avg_list(x, y, avg_time):
             temp_y.append(y[i])
             i += 1
         current_time += avg_time
-        avg_x.append(sum(temp_x)/float(len(temp_x)))
-        avg_y.append(sum(temp_y)/float(len(temp_y)))
+        avg_x.append(sum(temp_x)/float(len(temp_x) + 1))
+        avg_y.append(sum(temp_y)/float(len(temp_y) + 1))
 
     return avg_x, avg_y
 
 def graph_packet_loss(packet_loss_dict):
-    for key in ['L1', 'L2', 'L3']:
-    # for key in ['L1', 'L2']:
+    # for key in ['L1', 'L2', 'L3']:
+    for key in ['L1', 'L2']:
     # for key in ['L1']:
     # for key in packet_loss_dict:
         packet_loss_list = packet_loss_dict[key]
@@ -107,6 +107,8 @@ def graph_flow_rate(flow_rate_dict):
     for key in flow_rate_dict:
         flow_rate_list = flow_rate_dict[key]
         lines = []
+        # flow_rate_list = sorted(flow_rate_dict)
+
         x = [elem[0] for elem in flow_rate_list]
         y = [elem[1] for elem in flow_rate_list]
 
@@ -124,8 +126,8 @@ def graph_flow_rate(flow_rate_dict):
 
 
 def graph_link_rate(link_rate_dict):
-    for key in ['L1', 'L2', 'L3']:
-    # for key in ['L1', 'L2']:
+    # for key in ['L1', 'L2', 'L3']:
+    for key in ['L1', 'L2']:
     # for key in ['L1']:
         link_rate_list = link_rate_dict[key]
         lines = []
@@ -177,27 +179,13 @@ def graph_pck_buf(pck_graph_dict):
         x = [elem[0] for elem in value]
         y = [elem[1] for elem in value]
 
-        avg_x = []
-        avg_y = []
         avg_time = 5
-        current_time = avg_time
-        i = 0
-        while i < len(x):
-            temp_x = []
-            temp_y = []
-            while i < len(x) and x[i] < current_time:
-                temp_x.append(x[i])
-                temp_y.append(y[i])
-                i += 1
-            current_time += avg_time
-            avg_x.append(sum(temp_x)/float(len(temp_x)))
-            avg_y.append(sum(temp_y)/float(len(temp_y)))
+        avg_x, avg_y = smooth_avg_list(x, y, avg_time)
 
-
-        if key in ['L1', 'L2', 'L3']:
-        # if key in ['L1', 'L2']:
+        # if key in ['L1', 'L2', 'L3']:
+        if key in ['L1', 'L2']:
         # if key in ['L1']:
-            line_up, = plt.plot(x, y, linewidth = 2.0, label = key)
+            line_up, = plt.plot(avg_x, avg_y, linewidth = 2.0, label = key)
             lines.append(line_up)
 
     plt.ylabel("Buffer Occupancy")
@@ -205,5 +193,4 @@ def graph_pck_buf(pck_graph_dict):
     plt.legend()
     #plt.axis([0,max_x, 0, max_y * 2])
     plt.show()
-
 
