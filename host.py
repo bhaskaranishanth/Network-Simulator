@@ -28,6 +28,8 @@ class Host:
         self.last_recv_pkt_id = None
         self.last_miss_pkt_id = None
 
+        self.fast_recovery = 0
+
         # self.abs_window_count = 0 
 
     
@@ -92,6 +94,9 @@ class Host:
     def flow_done(self):
         return not self.outstanding_pkts
 
+    def get_fast_recovery(self):
+        return self.fast_recovery
+
 
     """ MUTATOR METHODS """
 
@@ -139,6 +144,9 @@ class Host:
 
     def set_bytes_received(self, packet_size):
         self.bytes_received = packet_size
+
+    def set_fast_recovery(self, fast_recovery):
+        self.fast_recovery = fast_recovery
 
     def insert_packet(self, packet):
         self.q.put(packet)

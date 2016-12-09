@@ -38,9 +38,7 @@ def store_flow_rate(flow_rate_dict, hosts, global_time):
             # store_link_rate(link_rate_dict, links, global_time)
 
 def store_link_rate(link_rate_dict, links, global_time):
-    # for l in ['L1', 'L2', 'L3']:
-    # for l in ['L1', 'L2']:
-    for l in ['L1']:
+    for l in link_rate_dict:
         prev = 0
         if len(link_rate_dict[l]) != 0:
             prev = links[l].prev
@@ -215,6 +213,7 @@ if __name__ == '__main__':
             ec.create_graph_event(global_time + GRAPH_EVENT_INTERVAL)
 
         elif event_type == UPDATE_WINDOW:
+            assert False    
             # Hackish solution to stop the program
             # if eq.qsize() < 5:
             #     break
@@ -298,11 +297,15 @@ if __name__ == '__main__':
 
         done = 1
         for h in hosts:
-            # print "out pkts", hosts[h].get_outstanding_pkts()
-            if not hosts[h].flow_done():
-                done = 0
-                break
-
+            if hosts[h].get_flow_id() != None:
+                if not len(hosts[h].get_outstanding_pkts()) % 1000:
+                    print "out pkts", len(hosts[h].get_outstanding_pkts()) / 1000
+                if not hosts[h].flow_done():
+                    
+                    done = 0
+                    break
+            # else:
+            #     assert False
 
     # for l in links:
     #     assert len(links[l].packet_queue) == 0
@@ -323,7 +326,7 @@ if __name__ == '__main__':
     # print 'This is dropped graph: ', pck_drop_graph
     graph_link_rate(link_rate_dict)
     graph_packet_loss(packet_loss_dict)
-    # exit(1)
+    # # exit(1)
     graph_flow_rate(flow_rate_dict)
     graph_pck_buf(pck_graph_dict)
     graph_window_size(window_size_dict)
